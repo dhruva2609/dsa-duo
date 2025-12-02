@@ -1,112 +1,139 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Colors } from '@/constants/Colors';
+import { quizData } from '@/constants/dsa-quiz-data';
+import { useRouter } from 'expo-router';
+import { Braces, ChevronRight, Code, Hash, Layers, Search, User } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+const slugify = (text: string) => {
+  return text.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/-+$/, '');
+};
 
-export default function TabTwoScreen() {
+const topicMetadata: Record<string, { icon: React.ReactNode; color: string }> = {
+  'core-concepts-complexity': { icon: <Hash size={20} color="#3F20F0" />, color: '#F6F5FF' },
+  'linked-lists': { icon: <Code size={20} color="#FF5C95" />, color: '#FFF0F5' },
+  'stacks-queues': { icon: <Layers size={20} color="#FFB800" />, color: '#FFF9E6' },
+  'sorting-algorithms': { icon: <Braces size={20} color="#00C48C" />, color: '#E6FAF4' },
+  'hash-maps-sets': { icon: <Search size={20} color="#7D5FFF" />, color: '#F2F0FF' },
+  'trees-heaps': { icon: <Hash size={20} color="#FF9F43" />, color: '#FFF5ED' },
+  'graphs': { icon: <Code size={20} color="#3F20F0" />, color: '#F6F5FF' },
+  'advanced-techniques': { icon: <Layers size={20} color="#FF5C95" />, color: '#FFF0F5' },
+};
+
+export default function ExploreScreen() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
+
+  const filteredTopics = quizData.filter(module => {
+    const matchesSearch = module.topic.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = activeFilter === 'All' || (module as any).difficulty === activeFilter;
+    return matchesSearch && matchesFilter;
+  });
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <View style={styles.header}>
+        <Text style={styles.title}>Explore</Text>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <Search size={20} color={Colors.textDim} />
+          <TextInput
+            placeholder="Search topics..."
+            placeholderTextColor={Colors.textDim}
+            style={styles.input}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+        
+        {/* FILTERS */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{gap: 8, paddingRight: 20}}>
+          {['All', 'Easy', 'Medium', 'Hard'].map((filter) => (
+            <Pressable 
+              key={filter} 
+              style={[styles.filterChip, activeFilter === filter && styles.filterChipActive]}
+              onPress={() => setActiveFilter(filter as any)}
+            >
+              <Text style={[styles.filterText, activeFilter === filter && styles.filterTextActive]}>{filter}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.list}>
+        <Text style={styles.sectionTitle}>
+          {searchQuery ? `Results` : `${activeFilter} Topics`}
+        </Text>
+        {filteredTopics.map((module) => {
+          const slug = slugify(module.topic);
+          const metadata = topicMetadata[slug] || { icon: <Code size={20} color={Colors.textDim} />, color: '#F0F0F0' };
+          const difficulty = (module as any).difficulty || 'Medium';
+          
+          return (
+            <Pressable key={slug} style={styles.card} onPress={() => router.push(`/quiz/${slug}`)}>
+              <View style={[styles.iconBox, { backgroundColor: metadata.color }]}>
+                {metadata.icon}
+              </View>
+              <View style={styles.info}>
+                <Text style={styles.cardTitle}>{module.topic}</Text>
+                <View style={{flexDirection: 'row', gap: 8, marginTop: 4}}>
+                   <Text style={styles.cardSubtitle}>{module.questions.length} Lessons</Text>
+                   <View style={[styles.badge, difficulty === 'Easy' ? {backgroundColor: '#E7FFDB'} : difficulty === 'Hard' ? {backgroundColor: '#FFDFDF'} : {backgroundColor: '#FFF9E6'}]}>
+                      <Text style={{fontSize: 10, fontWeight: '700', color: '#555'}}>{difficulty}</Text>
+                   </View>
+                </View>
+              </View>
+              <ChevronRight size={20} color={Colors.textDim} />
+            </Pressable>
+          );
         })}
-      </Collapsible>
-    </ParallaxScrollView>
+      </ScrollView>
+
+      {/* BOTTOM NAV PLACEHOLDER */}
+      <View style={styles.bottomBar}>
+        <Pressable style={styles.navItem} onPress={() => router.push('/(tabs)')}>
+           <Layers size={26} color={Colors.textDim} />
+        </Pressable>
+        <Pressable style={styles.navItem}>
+           <View style={styles.navIconActive}>
+              <Search size={22} color="white" />
+           </View>
+           <Text style={styles.navLabelActive}>Explore</Text>
+        </Pressable>
+        <Pressable style={styles.navItem} onPress={() => router.push('/(tabs)/profile')}>
+           <User size={26} color={Colors.textDim} />
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+  container: { flex: 1, backgroundColor: Colors.background },
+  header: { paddingTop: Platform.OS === 'android' ? 50 : 60, paddingHorizontal: 24, paddingBottom: 10 },
+  title: { fontSize: 32, fontWeight: '800', color: Colors.text },
+  searchContainer: { paddingHorizontal: 24, marginVertical: 20 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F2F2F7', paddingHorizontal: 16, height: 50, borderRadius: 16, marginBottom: 12 },
+  input: { flex: 1, marginLeft: 10, fontSize: 16, color: Colors.text, height: '100%' },
+  filterRow: { flexDirection: 'row' },
+  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E5E5' },
+  filterChipActive: { backgroundColor: Colors.text, borderColor: Colors.text },
+  filterText: { fontWeight: '600', color: Colors.text },
+  filterTextActive: { color: 'white' },
+  list: { paddingHorizontal: 24, paddingBottom: 100 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: Colors.text, marginBottom: 16 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 16, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: '#F0F0F0' },
+  iconBox: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  info: { flex: 1 },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
+  cardSubtitle: { fontSize: 13, color: Colors.textDim },
+  badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  bottomBar: { position: 'absolute', bottom: 0, width: '100%', height: 90, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#F5F5F5', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingBottom: 20, elevation: 20, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10 },
+  navItem: { alignItems: 'center', justifyContent: 'center', width: 60 },
+  navIconActive: { width: 48, height: 48, backgroundColor: Colors.text, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
+  navLabelActive: { fontSize: 12, fontWeight: '700', color: Colors.text }
 });
