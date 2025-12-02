@@ -1,13 +1,10 @@
 import { Colors } from '@/constants/Colors';
 import { quizData } from '@/constants/dsa-quiz-data';
+import { slugify } from '@/utils/slugify';
 import { useRouter } from 'expo-router';
-import { Braces, ChevronRight, Code, Hash, Layers, Search, User } from 'lucide-react-native';
+import { Braces, ChevronRight, Code, Hash, Layers, Search } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
-
-const slugify = (text: string) => {
-  return text.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/-+$/, '');
-};
 
 const topicMetadata: Record<string, { icon: React.ReactNode; color: string }> = {
   'core-concepts-complexity': { icon: <Hash size={20} color="#3F20F0" />, color: '#F6F5FF' },
@@ -92,22 +89,6 @@ export default function ExploreScreen() {
           );
         })}
       </ScrollView>
-
-      {/* BOTTOM NAV PLACEHOLDER */}
-      <View style={styles.bottomBar}>
-        <Pressable style={styles.navItem} onPress={() => router.push('/(tabs)')}>
-           <Layers size={26} color={Colors.textDim} />
-        </Pressable>
-        <Pressable style={styles.navItem}>
-           <View style={styles.navIconActive}>
-              <Search size={22} color="white" />
-           </View>
-           <Text style={styles.navLabelActive}>Explore</Text>
-        </Pressable>
-        <Pressable style={styles.navItem} onPress={() => router.push('/(tabs)/profile')}>
-           <User size={26} color={Colors.textDim} />
-        </Pressable>
-      </View>
     </View>
   );
 }
@@ -132,8 +113,4 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
   cardSubtitle: { fontSize: 13, color: Colors.textDim },
   badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  bottomBar: { position: 'absolute', bottom: 0, width: '100%', height: 90, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#F5F5F5', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingBottom: 20, elevation: 20, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10 },
-  navItem: { alignItems: 'center', justifyContent: 'center', width: 60 },
-  navIconActive: { width: 48, height: 48, backgroundColor: Colors.text, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
-  navLabelActive: { fontSize: 12, fontWeight: '700', color: Colors.text }
 });

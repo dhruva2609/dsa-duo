@@ -1,7 +1,7 @@
 import { useUser } from '@/app/context/UserContext';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
-import { Award, Flame, Layers, Search, Settings, Trash2, User, Zap } from 'lucide-react-native';
+import { Award, Flame, Layers, Settings, Trash2, Zap } from 'lucide-react-native';
 import React from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -59,11 +59,6 @@ export default function ProfileScreen() {
         </Pressable>
       </ScrollView>
 
-      <View style={styles.bottomBar}>
-        <Pressable style={styles.navItem} onPress={() => router.push('/(tabs)')}><Layers size={26} color={Colors.textDim} /></Pressable>
-        <Pressable style={styles.navItem} onPress={() => router.push('/(tabs)/explore')}><Search size={26} color={Colors.textDim} /></Pressable>
-        <Pressable style={styles.navItem}><View style={styles.navIconActive}><User size={22} color="white" /></View><Text style={styles.navLabelActive}>Profile</Text></Pressable>
-      </View>
     </View>
   );
 }

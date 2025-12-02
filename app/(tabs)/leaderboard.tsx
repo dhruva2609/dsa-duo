@@ -1,7 +1,7 @@
 import { useUser } from '@/app/context/UserContext';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Crown, Layers, Search, User as UserIcon } from 'lucide-react-native';
+import { ChevronLeft, Crown } from 'lucide-react-native';
 import React from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -56,25 +56,6 @@ export default function LeaderboardScreen() {
           })}
         </ScrollView>
       </View>
-      
-      {/* BOTTOM NAV PLACEHOLDER */}
-      <View style={styles.bottomBar}>
-        <Pressable style={styles.navItem} onPress={() => router.push('/(tabs)')}>
-           <Layers size={26} color={Colors.textDim} />
-        </Pressable>
-        <Pressable style={styles.navItem} onPress={() => router.push('/(tabs)/explore')}>
-           <Search size={26} color={Colors.textDim} />
-        </Pressable>
-        <Pressable style={styles.navItem}>
-           <View style={styles.navIconActive}>
-              <Crown size={22} color="white" />
-           </View>
-           <Text style={styles.navLabelActive}>Rank</Text>
-        </Pressable>
-        <Pressable style={styles.navItem} onPress={() => router.push('/(tabs)/profile')}>
-           <UserIcon size={26} color={Colors.textDim} />
-        </Pressable>
-      </View>
     </View>
   );
 }
@@ -118,13 +99,4 @@ const styles = StyleSheet.create({
   nameMe: { color: Colors.primary },
   
   xp: { fontSize: 16, fontWeight: '600', color: Colors.textDim },
-
-  bottomBar: {
-    position: 'absolute', bottom: 0, width: '100%', height: 90, backgroundColor: 'white',
-    borderTopWidth: 1, borderTopColor: '#F5F5F5', flexDirection: 'row',
-    justifyContent: 'space-around', alignItems: 'center', paddingBottom: 20,
-  },
-  navItem: { alignItems: 'center', justifyContent: 'center', width: 60 },
-  navIconActive: { width: 48, height: 48, backgroundColor: Colors.text, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
-  navLabelActive: { fontSize: 12, fontWeight: '700', color: Colors.text }
 });

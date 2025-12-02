@@ -1,241 +1,112 @@
-import { useUser } from '@/app/context/UserContext';
 import { Colors } from '@/constants/Colors';
 import { quizData } from '@/constants/dsa-quiz-data';
-import * as Haptics from 'expo-haptics';
+import { slugify } from '@/utils/slugify';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CheckCircle, Heart, X, XCircle } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-// Added Platform to imports below
-import { Modal, Platform, Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { ChevronLeft } from 'lucide-react-native';
+import React from 'react';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const slugify = (text: string) => {
-  return text.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/-+$/, '');
-};
-
-// Flatten quiz data for easier access
 const LEVEL_DATA = quizData.reduce((acc, module) => {
   const slug = slugify(module.topic);
   acc[slug] = {
     title: module.topic,
-    color: '#3F20F0',
-    questions: module.questions
+    theory: (module as any).theory || [], 
   };
   return acc;
-}, {} as Record<string, { title: string; color: string; questions: any[] }>);
+}, {} as Record<string, { title: string; theory: any[] }>);
 
-export default function DynamicQuizScreen() {
+export default function LearnScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { hearts, deductHeart, addMistake, addXp, completeLevel, unlockAchievement, xp } = useUser();
+  
+  // REMOVED the line causing error: const { colors } = useUser();
+  // We use the imported 'Colors' constant directly in the styles below.
 
-  const topicKey = String(id || 'core-concepts-complexity');
-  const topicData = LEVEL_DATA[topicKey] || LEVEL_DATA['core-concepts-complexity'];
-  const questions = topicData.questions;
+  const topicKey = String(id);
+  const topicData = LEVEL_DATA[topicKey];
 
-  const [qIndex, setQIndex] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [status, setStatus] = useState<'neutral' | 'correct' | 'wrong'>('neutral');
-  const [showFeedback, setShowFeedback] = useState(false);
-
-  const currentQ = questions[qIndex];
-  const progress = ((qIndex + 1) / questions.length) * 100;
-
-  useEffect(() => {
-    if (hearts <= 0) {
-      router.replace('/game-over');
-    }
-  }, [hearts]);
-
-  const handleCheck = () => {
-    if (!selected) return;
-
-    if (selected === currentQ.answer) {
-      setStatus('correct');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
-      setStatus('wrong');
-      deductHeart();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      
-      // Feature: Add to Review List
-      addMistake({
-        q: currentQ.q,
-        options: currentQ.options,
-        answer: currentQ.answer,
-        explanation: currentQ.explanation
-      });
-    }
-    setShowFeedback(true);
-  };
-
-  const handleContinue = () => {
-    setShowFeedback(false);
-    setStatus('neutral');
-    setSelected(null);
-    if (qIndex < questions.length - 1) {
-      setQIndex(qIndex + 1);
-    } else {
-      // Quiz Completed Logic
-      completeLevel(topicKey);
-      addXp(20);
-      
-      // Feature: Check Achievements
-      if (xp + 20 >= 100) unlockAchievement('novice_coder');
-      unlockAchievement('first_win'); // Simple achievement for finishing any quiz
-
-      router.replace('/quiz/success');
-    }
-  };
+  // 1. Safety Check: If topic doesn't exist
+  if (!topicData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                <ChevronLeft size={24} color={Colors.text} />
+            </TouchableOpacity>
+        </View>
+        <View style={styles.centerContent}>
+            <Text style={styles.errorText}>Topic not found.</Text>
+            <TouchableOpacity style={styles.btnPrimary} onPress={() => router.back()}>
+                <Text style={styles.btnText}>Go Back</Text>
+            </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-
+      
+      {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={20}>
-          <X color={Colors.textDim} size={28} />
-        </Pressable>
-        <View style={styles.progressBarBg}>
-          <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
-        </View>
-        <View style={styles.livesContainer}>
-          <Heart color={Colors.error} fill={Colors.error} size={24} />
-          <Text style={styles.livesText}>{hearts}</Text>
-        </View>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <ChevronLeft size={24} color={Colors.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{topicData.title}</Text>
+        <View style={{ width: 40 }} /> 
       </View>
 
-      <View style={styles.body}>
-        <Text style={styles.topicLabel}>{topicData.title}</Text>
-        <Text style={styles.questionText}>{currentQ.q}</Text>
-
-        <View style={styles.optionsContainer}>
-          {currentQ.options.map((opt: string, index: number) => {
-            const isSelected = selected === opt;
-            const isCorrectState = status === 'correct' && isSelected;
-            const isWrongState = status === 'wrong' && isSelected;
-
-            let borderColor = '#E5E5E5';
-            let bgColor = 'white';
-
-            if (isSelected) {
-               borderColor = Colors.primary;
-               bgColor = '#F6F5FF';
-            }
-            if (isCorrectState) {
-               borderColor = Colors.success;
-               bgColor = '#E7FFDB';
-            }
-            if (isWrongState) {
-               borderColor = Colors.error;
-               bgColor = '#FFDFDF';
-            }
-
-            return (
-              <Pressable
-                key={index}
-                onPress={() => status === 'neutral' && setSelected(opt)}
-                style={[
-                  styles.optionBtn,
-                  { borderColor, backgroundColor: bgColor }
-                ]}
-              >
-                <Text style={[
-                  styles.optionText,
-                  isSelected && { color: Colors.primaryDark },
-                  isCorrectState && { color: Colors.successDark },
-                  isWrongState && { color: Colors.errorDark }
-                ]}>
-                  {opt}
-                </Text>
-                <View style={[
-                   styles.optionEdge,
-                   isSelected && { backgroundColor: Colors.primary },
-                   isCorrectState && { backgroundColor: Colors.success },
-                   isWrongState && { backgroundColor: Colors.error }
-                ]} />
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
-      <View style={styles.footer}>
-        <Pressable
-          style={[styles.checkBtn, !selected && styles.checkBtnDisabled]}
-          onPress={handleCheck}
-          disabled={!selected}
-        >
-          <Text style={styles.checkBtnText}>CHECK</Text>
-        </Pressable>
-      </View>
-
-      <Modal visible={showFeedback} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={[styles.feedbackBox, status === 'wrong' ? styles.feedbackWrong : styles.feedbackCorrect]}>
-            <View style={styles.feedbackHeader}>
-              {status === 'correct' ? <CheckCircle color={Colors.successDark} size={32} /> : <XCircle color={Colors.errorDark} size={32} />}
-              <Text style={[styles.feedbackTitle, status === 'correct' ? {color: Colors.successDark} : {color: Colors.errorDark}]}>
-                {status === 'correct' ? 'Awesome!' : 'Incorrect'}
-              </Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {topicData.theory && topicData.theory.length > 0 ? (
+          topicData.theory.map((item, index) => (
+            <View key={index} style={styles.card}>
+              <Text style={styles.cardTitle}>{item.title}</Text>
+              <Text style={styles.cardDesc}>{item.description}</Text>
             </View>
+          ))
+        ) : (
+           <View style={styles.card}>
+              <Text style={styles.cardTitle}>Introduction</Text>
+              <Text style={styles.cardDesc}>
+                Welcome to the {topicData.title} module. Here you will learn the fundamental concepts before testing your knowledge in the quiz.
+              </Text>
+           </View>
+        )}
 
-            <Text style={styles.feedbackText}>
-              {status === 'wrong' && <Text style={{fontWeight: 'bold'}}>Answer: {currentQ.answer}{'\n'}</Text>}
-              {currentQ.explanation}
-            </Text>
-
-            <Pressable
-              style={[styles.continueBtn, status === 'wrong' ? {backgroundColor: Colors.error} : {backgroundColor: Colors.success}]}
-              onPress={handleContinue}
-            >
-              <Text style={styles.continueText}>CONTINUE</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+        <TouchableOpacity 
+            style={styles.quizBtn} 
+            onPress={() => router.replace({ pathname: '/quiz/[id]', params: { id: topicKey } })}
+        >
+            <Text style={styles.quizBtnText}>Ready for the Quiz?</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
-  header: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 10,
-    justifyContent: 'space-between'
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  header: { 
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
+    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 10, backgroundColor: 'white'
   },
-  progressBarBg: { flex: 1, height: 12, backgroundColor: '#F0F0F0', borderRadius: 6, marginHorizontal: 16 },
-  progressBarFill: { height: '100%', backgroundColor: Colors.success, borderRadius: 6 },
-  livesContainer: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  livesText: { color: Colors.error, fontWeight: '800', fontSize: 16 },
-  body: { flex: 1, padding: 24 },
-  topicLabel: { fontSize: 12, fontWeight: '800', color: Colors.textDim, textTransform: 'uppercase', marginBottom: 8, letterSpacing: 1 },
-  questionText: { fontSize: 24, fontWeight: '800', color: Colors.text, marginBottom: 24, lineHeight: 32 },
-  optionsContainer: { gap: 14 },
-  optionBtn: {
-    backgroundColor: 'white', borderWidth: 2, borderColor: '#E5E5E5',
-    borderRadius: 16, padding: 18, position: 'relative', marginBottom: 4
+  backBtn: { padding: 8, borderRadius: 8, backgroundColor: '#F0F0F0' },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: Colors.text, flex: 1, textAlign: 'center' },
+  scrollContent: { padding: 20, paddingBottom: 50 },
+  card: { 
+    backgroundColor: 'white', padding: 20, borderRadius: 16, marginBottom: 16,
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }
   },
-  optionText: { fontSize: 17, color: Colors.text, fontWeight: '600' },
-  optionEdge: {
-    position: 'absolute', bottom: -6, left: -2, right: -2, height: 6,
-    backgroundColor: '#E5E5E5', borderBottomLeftRadius: 16, borderBottomRightRadius: 16, zIndex: -1
+  cardTitle: { fontSize: 18, fontWeight: '700', color: Colors.primary, marginBottom: 8 },
+  cardDesc: { fontSize: 16, color: Colors.text, lineHeight: 24 },
+  centerContent: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  errorText: { fontSize: 18, color: Colors.textDim, marginBottom: 20 },
+  btnPrimary: { backgroundColor: Colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
+  btnText: { color: 'white', fontWeight: '700' },
+  quizBtn: { 
+    backgroundColor: Colors.primary, padding: 18, borderRadius: 16, 
+    alignItems: 'center', marginTop: 10 
   },
-  footer: { padding: 20, borderTopWidth: 1, borderColor: '#F5F5F5' },
-  checkBtn: {
-    backgroundColor: Colors.success, height: 56, borderRadius: 16,
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: Colors.success, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: {width: 0, height: 4}
-  },
-  checkBtnDisabled: { backgroundColor: '#E5E5E5', shadowOpacity: 0 },
-  checkBtnText: { color: 'white', fontWeight: '800', fontSize: 16, letterSpacing: 1 },
-  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
-  feedbackBox: { padding: 30, borderTopLeftRadius: 30, borderTopRightRadius: 30, minHeight: 250 },
-  feedbackCorrect: { backgroundColor: '#D7FFB8' },
-  feedbackWrong: { backgroundColor: '#FFDFDF' },
-  feedbackHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  feedbackTitle: { fontSize: 24, fontWeight: '800' },
-  feedbackText: { fontSize: 16, color: Colors.text, marginBottom: 30, lineHeight: 24 },
-  continueBtn: { height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  continueText: { color: 'white', fontWeight: '800', fontSize: 16, letterSpacing: 1 },
+  quizBtnText: { color: 'white', fontSize: 16, fontWeight: '800' }
 });
