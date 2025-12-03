@@ -1,34 +1,31 @@
+import { Header } from '@/components/Header'; // Import new Header component
 import { Colors } from '@/constants/Colors';
-import { quizData } from '@/constants/dsa-quiz-data';
+import { quizzes } from '@/constants/quizzes'; // Import the consolidated data source
 import { slugify } from '@/utils/slugify';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native'; // Still needed for the fallback header
 import React from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const LEVEL_DATA = quizData.reduce((acc, module) => {
-  const slug = slugify(module.topic);
-  acc[slug] = {
-    title: module.topic,
-    theory: (module as any).theory || [], 
-  };
-  return acc;
-}, {} as Record<string, { title: string; theory: any[] }>);
+// --- REMOVED: Deleted manual LEVEL_DATA object construction ---
+
+const language = 'javascript'; 
 
 export default function LearnScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   
-  // REMOVED the line causing error: const { colors } = useUser();
-  // We use the imported 'Colors' constant directly in the styles below.
-
   const topicKey = String(id);
-  const topicData = LEVEL_DATA[topicKey];
+  
+  // Correctly fetch topicData from the consolidated quiz structure
+  const topicData = (quizzes[language as keyof typeof quizzes]?.dsa ?? []).find((t: any) => slugify(t.topic) === topicKey);
+  const theoryContent = topicData?.theory; // Get theory, which is now consistently available/optional
 
   // 1. Safety Check: If topic doesn't exist
   if (!topicData) {
     return (
       <SafeAreaView style={styles.container}>
+        {/* Fallback Header (simplified, as Header component needs theme context which might fail here) */}
         <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                 <ChevronLeft size={24} color={Colors.text} />
@@ -44,22 +41,18 @@ export default function LearnScreen() {
     );
   }
 
+  const hasTheory = theoryContent && theoryContent.length > 0;
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <ChevronLeft size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{topicData.title}</Text>
-        <View style={{ width: 40 }} /> 
-      </View>
+      {/* Header: Replaced the manual header with the reusable component */}
+      <Header title={topicData.topic} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {topicData.theory && topicData.theory.length > 0 ? (
-          topicData.theory.map((item, index) => (
+        {hasTheory ? (
+          theoryContent.map((item: {title: string, description: string}, index: number) => (
             <View key={index} style={styles.card}>
               <Text style={styles.cardTitle}>{item.title}</Text>
               <Text style={styles.cardDesc}>{item.description}</Text>
@@ -69,7 +62,7 @@ export default function LearnScreen() {
            <View style={styles.card}>
               <Text style={styles.cardTitle}>Introduction</Text>
               <Text style={styles.cardDesc}>
-                Welcome to the {topicData.title} module. Here you will learn the fundamental concepts before testing your knowledge in the quiz.
+                Welcome to the {topicData.topic} module. There are no detailed theory notes for this module, but you can jump straight into the quiz!
               </Text>
            </View>
         )}
@@ -87,6 +80,7 @@ export default function LearnScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FA' },
+  // --- Removed manual header, backBtn, headerTitle styles as they are now handled by <Header> ---
   header: { 
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
     paddingHorizontal: 20, paddingTop: 10, paddingBottom: 10, backgroundColor: 'white'
@@ -105,8 +99,12 @@ const styles = StyleSheet.create({
   btnPrimary: { backgroundColor: Colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
   btnText: { color: 'white', fontWeight: '700' },
   quizBtn: { 
-    backgroundColor: Colors.primary, padding: 18, borderRadius: 16, 
-    alignItems: 'center', marginTop: 10 
+    backgroundColor: Colors.primary, 
+    height: 56,
+    borderRadius: 16, 
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10 
   },
   quizBtnText: { color: 'white', fontSize: 16, fontWeight: '800' }
 });

@@ -1,10 +1,11 @@
+import { Header } from '@/components/Header'; // FIX: Use shared Header component
 import { Colors } from '@/constants/Colors';
-import { quizData } from '@/constants/dsa-quiz-data';
+import { quizzes } from '@/constants/quizzes'; // FIX: Use consolidated data source
 import { slugify } from '@/utils/slugify';
 import { useRouter } from 'expo-router';
 import { Braces, ChevronRight, Code, Hash, Layers, Search } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 
 const topicMetadata: Record<string, { icon: React.ReactNode; color: string }> = {
   'core-concepts-complexity': { icon: <Hash size={20} color="#3F20F0" />, color: '#F6F5FF' },
@@ -22,18 +23,23 @@ export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
 
-  const filteredTopics = quizData.filter(module => {
+  const language = 'javascript';
+  // FIX: Fetch data from the new, reliable consolidated source
+  const allTopics = quizzes[language as keyof typeof quizzes]?.dsa || []; 
+
+  const filteredTopics = allTopics.filter(module => {
     const matchesSearch = module.topic.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = activeFilter === 'All' || (module as any).difficulty === activeFilter;
+    // FIX: module.difficulty is now correctly available
+    const matchesFilter = activeFilter === 'All' || module.difficulty === activeFilter; 
     return matchesSearch && matchesFilter;
   });
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <Text style={styles.title}>Explore</Text>
-      </View>
+      
+      {/* FIX: Replaced manual large header with shared Header component */}
+      <Header title="Explore Topics" showBack={false} style={{paddingBottom: 0}} />
 
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
@@ -63,24 +69,34 @@ export default function ExploreScreen() {
 
       <ScrollView contentContainerStyle={styles.list}>
         <Text style={styles.sectionTitle}>
-          {searchQuery ? `Results` : `${activeFilter} Topics`}
+          {searchQuery ? `Search Results` : `${activeFilter} Topics`}
         </Text>
         {filteredTopics.map((module) => {
           const slug = slugify(module.topic);
           const metadata = topicMetadata[slug] || { icon: <Code size={20} color={Colors.textDim} />, color: '#F0F0F0' };
-          const difficulty = (module as any).difficulty || 'Medium';
+          const difficulty = module.difficulty || 'Medium';
           
           return (
-            <Pressable key={slug} style={styles.card} onPress={() => router.push(`/quiz/${slug}`)}>
-              <View style={[styles.iconBox, { backgroundColor: metadata.color }]}>
+            <Pressable 
+              key={slug} 
+              style={[
+                styles.card, 
+                // UI FIX: Apply the unique metadata color for visual distinction
+                { backgroundColor: metadata.color } 
+              ]} 
+              onPress={() => router.push(`/quiz/${slug}`)}
+            >
+              {/* Icon box is explicitly white for contrast */}
+              <View style={[styles.iconBox, { backgroundColor: 'white' }]}>
                 {metadata.icon}
               </View>
               <View style={styles.info}>
                 <Text style={styles.cardTitle}>{module.topic}</Text>
                 <View style={{flexDirection: 'row', gap: 8, marginTop: 4}}>
                    <Text style={styles.cardSubtitle}>{module.questions.length} Lessons</Text>
-                   <View style={[styles.badge, difficulty === 'Easy' ? {backgroundColor: '#E7FFDB'} : difficulty === 'Hard' ? {backgroundColor: '#FFDFDF'} : {backgroundColor: '#FFF9E6'}]}>
-                      <Text style={{fontSize: 10, fontWeight: '700', color: '#555'}}>{difficulty}</Text>
+                   {/* Updated difficulty badge color logic for better theme adherence */}
+                   <View style={[styles.badge, difficulty === 'Easy' ? {backgroundColor: '#E7FFDB'} : difficulty === 'Hard' ? {backgroundColor: Colors.errorDark + '20'} : {backgroundColor: '#FFF9E6'}]}>
+                      <Text style={{fontSize: 10, fontWeight: '700', color: Colors.text}}>{difficulty}</Text>
                    </View>
                 </View>
               </View>
@@ -95,8 +111,7 @@ export default function ExploreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: { paddingTop: Platform.OS === 'android' ? 50 : 60, paddingHorizontal: 24, paddingBottom: 10 },
-  title: { fontSize: 32, fontWeight: '800', color: Colors.text },
+  // Removed manual header/title styles
   searchContainer: { paddingHorizontal: 24, marginVertical: 20 },
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F2F2F7', paddingHorizontal: 16, height: 50, borderRadius: 16, marginBottom: 12 },
   input: { flex: 1, marginLeft: 10, fontSize: 16, color: Colors.text, height: '100%' },
@@ -107,8 +122,21 @@ const styles = StyleSheet.create({
   filterTextActive: { color: 'white' },
   list: { paddingHorizontal: 24, paddingBottom: 100 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: Colors.text, marginBottom: 16 },
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 16, borderRadius: 20, marginBottom: 12, borderWidth: 1, borderColor: '#F0F0F0' },
-  iconBox: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  // Distinct card style for Explore screen
+  card: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    padding: 16, 
+    borderRadius: 20, 
+    marginBottom: 12, 
+    borderWidth: 2, 
+    borderColor: '#E0EEED', // Added thicker border for contrast
+    shadowColor: '#000', 
+    shadowOpacity: 0.05, 
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowRadius: 8,
+  },
+  iconBox: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16, backgroundColor: 'white' },
   info: { flex: 1 },
   cardTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
   cardSubtitle: { fontSize: 13, color: Colors.textDim },
