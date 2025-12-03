@@ -1,102 +1,145 @@
 import { useUser } from '@/app/context/UserContext';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
-import { ChevronLeft, Crown } from 'lucide-react-native';
+import { Crown } from 'lucide-react-native';
 import React from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const otherUsers = [
-  { id: 2, name: "Sarah", xp: 2100, avatar: "S" },
-  { id: 3, name: "Mike", xp: 1950, avatar: "M" },
-  { id: 4, name: "Alex", xp: 1600, avatar: "A" },
-  { id: 5, name: "Emma", xp: 1200, avatar: "E" },
-  { id: 6, name: "David", xp: 950, avatar: "D" },
-  { id: 7, name: "Chloe", xp: 800, avatar: "C" },
+  { id: 2, name: "Sarah_Dev", xp: 2100, avatar: "S", color: "#3B82F6" }, 
+  { id: 3, name: "Mike.js", xp: 1950, avatar: "M", color: "#10B981" },   
+  { id: 4, name: "Alex_Code", xp: 1600, avatar: "A", color: "#8B5CF6" }, 
+  { id: 5, name: "Emma_Py", xp: 1200, avatar: "E", color: "#F59E0B" },
+  { id: 6, name: "David_Cpp", xp: 950, avatar: "D", color: "#EC4899" },
+  { id: 7, name: "Chloe_UI", xp: 800, avatar: "C", color: "#6366F1" },
 ];
 
 export default function LeaderboardScreen() {
-  const router = useRouter();
   const { xp: userXp } = useUser();
-
-  const currentUser = { id: 1, name: "You", xp: userXp, avatar: "JD" };
-  const allUsers = [...otherUsers, currentUser];
-  const sortedUsers = allUsers.sort((a, b) => b.xp - a.xp);
+  const currentUser = { id: 1, name: "Dhruva", xp: userXp, avatar: "DP", color: Colors.primary };
+  const allUsers = [...otherUsers, currentUser].sort((a, b) => b.xp - a.xp);
+  
+  const topThree = allUsers.slice(0, 3);
+  const restUsers = allUsers.slice(3);
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <ChevronLeft size={28} color="white" />
-        </Pressable>
-        <Text style={styles.title}>Diamond League</Text>
-        <Crown size={28} color="#FFD700" fill="#FFD700" />
+        <Text style={styles.headerTitle}>Leaderboard</Text>
+        <View style={styles.leagueTag}>
+          <Text style={styles.leagueText}>WEEKLY</Text>
+        </View>
       </View>
 
-      {/* List Container */}
-      <View style={styles.rankListBg}>
-        <ScrollView contentContainerStyle={styles.listContent}>
-          {sortedUsers.map((user, index) => {
-            const rank = index + 1;
-            const isTop3 = rank <= 3;
-            const isMe = user.name === "You";
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        {/* Podium */}
+        <View style={styles.podiumContainer}>
+          {/* 2nd */}
+          <View style={[styles.podiumCard, { marginTop: 40 }]}>
+            <View style={[styles.avatar, { borderColor: '#94A3B8' }]}>
+              <Text style={styles.avatarText}>{topThree[1].avatar}</Text>
+              <View style={[styles.rankBadge, { backgroundColor: '#94A3B8' }]}>
+                <Text style={styles.rankText}>2</Text>
+              </View>
+            </View>
+            <Text style={styles.podiumName}>{topThree[1].name}</Text>
+            <Text style={styles.podiumXp}>{topThree[1].xp}</Text>
+          </View>
+
+          {/* 1st */}
+          <View style={[styles.podiumCard, styles.podiumFirst]}>
+            <Crown size={24} color="#F59E0B" fill="#F59E0B" style={{marginBottom: 8}} />
+            <View style={[styles.avatar, { borderColor: '#F59E0B', width: 80, height: 80 }]}>
+              <Text style={[styles.avatarText, { fontSize: 28 }]}>{topThree[0].avatar}</Text>
+              <View style={[styles.rankBadge, { backgroundColor: '#F59E0B' }]}>
+                <Text style={styles.rankText}>1</Text>
+              </View>
+            </View>
+            <Text style={[styles.podiumName, { fontSize: 16, color: Colors.primaryDark }]}>{topThree[0].name}</Text>
+            <Text style={[styles.podiumXp, { color: Colors.primaryDark }]}>{topThree[0].xp}</Text>
+          </View>
+
+          {/* 3rd */}
+          <View style={[styles.podiumCard, { marginTop: 40 }]}>
+            <View style={[styles.avatar, { borderColor: '#B45309' }]}>
+              <Text style={styles.avatarText}>{topThree[2].avatar}</Text>
+              <View style={[styles.rankBadge, { backgroundColor: '#B45309' }]}>
+                <Text style={styles.rankText}>3</Text>
+              </View>
+            </View>
+            <Text style={styles.podiumName}>{topThree[2].name}</Text>
+            <Text style={styles.podiumXp}>{topThree[2].xp}</Text>
+          </View>
+        </View>
+
+        {/* Rank List */}
+        <View style={styles.listContainer}>
+          {restUsers.map((user, index) => {
+            const rank = index + 4;
+            const isMe = user.name === "Dhruva";
 
             return (
-              <View key={user.id} style={[styles.rankItem, isMe && styles.rankItemMe]}>
-                <Text style={[styles.rankNum, isTop3 && styles.rankNumTop]}>{rank}</Text>
-                
-                <View style={[styles.avatar, { backgroundColor: getColorForChar(user.avatar) }]}>
-                  <Text style={styles.avatarText}>{user.avatar}</Text>
+              <View key={user.id} style={[styles.rankRow, isMe && styles.rankRowMe]}>
+                <Text style={styles.rankNum}>{rank}</Text>
+                <View style={[styles.listAvatar, { backgroundColor: isMe ? Colors.primary : 'white', borderColor: user.color }]}>
+                  <Text style={[styles.listAvatarText, isMe && { color: 'white' }]}>{user.avatar}</Text>
                 </View>
-                
-                <Text style={[styles.name, isMe && styles.nameMe]}>{user.name}</Text>
-                <Text style={styles.xp}>{user.xp} XP</Text>
+                <Text style={[styles.rowName, isMe && { color: Colors.primary }]}>{user.name}</Text>
+                <Text style={styles.rowXp}>{user.xp} XP</Text>
               </View>
             );
           })}
-        </ScrollView>
-      </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
-const getColorForChar = (char: string) => {
-  const colors = ['#FF9F43', '#54A0FF', '#5F27CD', '#FF6B6B', '#1DD1A1', '#00C48C', '#7D5FFF'];
-  return colors[char.charCodeAt(0) % colors.length];
-};
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.primary },
+  container: { flex: 1, backgroundColor: Colors.background },
   header: { 
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'android' ? 50 : 60, paddingHorizontal: 24, paddingBottom: 30,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingTop: Platform.OS === 'android' ? 50 : 60, paddingHorizontal: 24, paddingBottom: 20
   },
-  title: { fontSize: 22, fontWeight: '800', color: 'white' },
-  backBtn: { width: 40 },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: Colors.primaryDark },
+  leagueTag: { backgroundColor: 'white', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  leagueText: { fontSize: 12, fontWeight: '700', color: Colors.primary },
+
+  scrollContent: { paddingBottom: 100 },
   
-  rankListBg: { 
-    flex: 1, backgroundColor: 'white', borderTopLeftRadius: 30, borderTopRightRadius: 30,
-    overflow: 'hidden', paddingBottom: 80
+  podiumContainer: { 
+    flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 30, paddingHorizontal: 20 
   },
-  listContent: { padding: 24 },
-  
-  rankItem: { 
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 16,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0'
-  },
-  rankItemMe: { backgroundColor: '#F6F5FF', marginHorizontal: -24, paddingHorizontal: 24, borderRadius: 10 },
-  
-  rankNum: { fontSize: 18, fontWeight: '600', color: Colors.textDim, width: 30, textAlign: 'center' },
-  rankNumTop: { color: Colors.primary, fontWeight: '800' },
+  podiumCard: { alignItems: 'center', width: 90 },
+  podiumFirst: { marginTop: 0 },
   
   avatar: { 
-    width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center',
-    marginHorizontal: 16
+    width: 64, height: 64, borderRadius: 32, backgroundColor: 'white', 
+    justifyContent: 'center', alignItems: 'center', borderWidth: 3, marginBottom: 8,
+    shadowColor: Colors.shadow, shadowOpacity: 0.1, shadowRadius: 10, elevation: 5
   },
-  avatarText: { color: 'white', fontWeight: '700', fontSize: 16 },
-  
-  name: { flex: 1, fontSize: 16, fontWeight: '700', color: Colors.text },
-  nameMe: { color: Colors.primary },
-  
-  xp: { fontSize: 16, fontWeight: '600', color: Colors.textDim },
+  avatarText: { fontSize: 20, fontWeight: '800', color: Colors.primaryDark },
+  rankBadge: { 
+    position: 'absolute', bottom: -10, width: 24, height: 24, borderRadius: 12, 
+    justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'white' 
+  },
+  rankText: { color: 'white', fontSize: 10, fontWeight: '800' },
+  podiumName: { fontSize: 14, fontWeight: '700', color: Colors.textDim, marginBottom: 2 },
+  podiumXp: { fontSize: 13, fontWeight: '800', color: Colors.textDim },
+
+  listContainer: { paddingHorizontal: 24 },
+  rankRow: { 
+    flexDirection: 'row', alignItems: 'center', padding: 16, 
+    backgroundColor: 'white', borderRadius: 16, marginBottom: 12,
+    shadowColor: Colors.shadow, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2
+  },
+  rankRowMe: { borderWidth: 1, borderColor: Colors.primary },
+  rankNum: { width: 30, fontSize: 16, fontWeight: '700', color: Colors.textDim },
+  listAvatar: { 
+    width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', 
+    borderWidth: 2, marginRight: 14 
+  },
+  listAvatarText: { fontSize: 14, fontWeight: '700', color: Colors.primaryDark },
+  rowName: { flex: 1, fontSize: 16, fontWeight: '700', color: Colors.primaryDark },
+  rowXp: { fontSize: 14, fontWeight: '700', color: Colors.primary },
 });

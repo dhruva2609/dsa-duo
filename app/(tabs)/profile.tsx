@@ -10,87 +10,118 @@ export default function ProfileScreen() {
   const { xp, hearts, achievements, resetProgress } = useUser();
 
   const badges = [
-    { id: 'first_win', title: 'First Steps', desc: 'Complete your first quiz', icon: <Zap size={24} color="#FFD700" /> },
-    { id: 'novice_coder', title: 'Novice Coder', desc: 'Earn 100 XP', icon: <CodeIcon /> },
-    { id: 'streak_3', title: 'On Fire', desc: 'Reach a 3-day streak', icon: <Flame size={24} color="#FF5C95" /> }
+    { id: 'first_win', title: 'Hello World', desc: 'Completed first quiz', icon: <Zap size={20} color={Colors.warning} fill={Colors.warning} /> },
+    { id: 'novice_coder', title: 'Git Commit', desc: 'Earned 100 XP', icon: <Layers size={20} color={Colors.primary} /> },
+    { id: 'streak_3', title: 'Hotfix Hero', desc: '3-day streak', icon: <Flame size={20} color={Colors.error} fill={Colors.error} /> }
   ];
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <Pressable onPress={() => router.push('/settings')} style={styles.iconBtn}>
+          <Settings size={22} color={Colors.primaryDark} />
+        </Pressable>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <Pressable onPress={() => router.push('/settings')}><Settings size={24} color={Colors.text} /></Pressable>
+        
+        {/* Profile Card */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>DP</Text>
+          </View>
+          <Text style={styles.name}>Dhruva Pandya</Text>
+          <Text style={styles.handle}>@dhruvadev</Text>
+          
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{xp}</Text>
+              <Text style={styles.statLabel}>XP</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{hearts}</Text>
+              <Text style={styles.statLabel}>Hearts</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>5</Text>
+              <Text style={styles.statLabel}>Streak</Text>
+            </View>
+          </View>
         </View>
 
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>JD</Text></View>
-          <Text style={styles.name}>John Developer</Text>
-          <Text style={styles.handle}>@johndev</Text>
-        </View>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}><Flame size={24} color={Colors.error} fill={Colors.error} /><Text style={styles.statValue}>{hearts}</Text><Text style={styles.statLabel}>Hearts</Text></View>
-          <View style={styles.statCard}><Zap size={24} color={Colors.primary} fill={Colors.primary} /><Text style={styles.statValue}>{xp}</Text><Text style={styles.statLabel}>Total XP</Text></View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Achievements</Text>
+        {/* Badges */}
+        <Text style={styles.sectionTitle}>Achievements</Text>
+        <View style={styles.badgesContainer}>
           {badges.map(badge => {
             const isUnlocked = achievements.includes(badge.id);
             return (
-              <View key={badge.id} style={[styles.achievementCard, !isUnlocked && {opacity: 0.5}]}>
-                <View style={[styles.badge, { backgroundColor: isUnlocked ? '#FFF5E0' : '#F0F0F0' }]}>
-                   {isUnlocked ? badge.icon : <Award size={24} color={Colors.textDim} />}
+              <View key={badge.id} style={[styles.badgeCard, !isUnlocked && styles.lockedCard]}>
+                <View style={[styles.iconBox, { backgroundColor: isUnlocked ? 'white' : '#F4F7FE' }]}>
+                  {isUnlocked ? badge.icon : <Award size={20} color={Colors.textDim} />}
                 </View>
-                <View style={styles.achievementInfo}>
-                  <Text style={styles.achTitle}>{badge.title}</Text>
-                  <Text style={styles.achDesc}>{badge.desc}</Text>
+                <View>
+                  <Text style={styles.badgeTitle}>{badge.title}</Text>
+                  <Text style={styles.badgeDesc}>{badge.desc}</Text>
                 </View>
-                {isUnlocked && <CheckIcon />}
               </View>
             );
           })}
         </View>
 
         <Pressable style={styles.resetBtn} onPress={resetProgress}>
-            <Trash2 size={20} color={Colors.error} />
-            <Text style={styles.resetText}>Reset Progress</Text>
+            <Trash2 size={18} color={Colors.error} />
+            <Text style={styles.resetText}>Reset All Progress</Text>
         </Pressable>
-      </ScrollView>
 
+      </ScrollView>
     </View>
   );
 }
 
-function CodeIcon() { return <Layers size={24} color="#3F20F0" /> }
-function CheckIcon() { return <View style={{backgroundColor: Colors.success, borderRadius: 10, padding: 2}}><Award size={12} color="white" /></View> }
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  scroll: { paddingBottom: 100 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: Platform.OS === 'android' ? 50 : 60, paddingHorizontal: 24, marginBottom: 20 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: Colors.text },
-  profileHeader: { alignItems: 'center', marginBottom: 30 },
-  avatar: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#E0E0FF', justifyContent: 'center', alignItems: 'center', marginBottom: 16, borderWidth: 4, borderColor: 'white', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
-  avatarText: { fontSize: 32, fontWeight: '800', color: Colors.primary },
-  name: { fontSize: 24, fontWeight: '800', color: Colors.text },
-  handle: { fontSize: 16, color: Colors.textDim, marginTop: 4 },
-  statsRow: { flexDirection: 'row', paddingHorizontal: 24, gap: 16, marginBottom: 30 },
-  statCard: { flex: 1, backgroundColor: 'white', padding: 20, borderRadius: 20, alignItems: 'center', borderWidth: 1, borderColor: '#F0F0F0', shadowColor: '#000', shadowOpacity: 0.05, shadowOffset: {width: 0, height: 4}, shadowRadius: 8 },
-  statValue: { fontSize: 24, fontWeight: '800', color: Colors.text, marginTop: 8 },
-  statLabel: { fontSize: 14, color: Colors.textDim, fontWeight: '600' },
-  section: { paddingHorizontal: 24 },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: Colors.text, marginBottom: 16 },
-  achievementCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 16, borderRadius: 20, borderWidth: 1, borderColor: '#F0F0F0', marginBottom: 12 },
-  badge: { width: 50, height: 50, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  achievementInfo: { flex: 1 },
-  achTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
-  achDesc: { fontSize: 13, color: Colors.textDim, marginTop: 2 },
-  resetBtn: { marginTop: 40, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  resetText: { color: Colors.error, fontWeight: '700' },
-  bottomBar: { position: 'absolute', bottom: 0, width: '100%', height: 90, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#F5F5F5', flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingBottom: 20, elevation: 20 },
-  navItem: { alignItems: 'center', justifyContent: 'center', width: 60 },
-  navIconActive: { width: 48, height: 48, backgroundColor: Colors.text, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
-  navLabelActive: { fontSize: 12, fontWeight: '700', color: Colors.text }
+  header: { 
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingTop: Platform.OS === 'android' ? 50 : 60, paddingHorizontal: 24, paddingBottom: 20
+  },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: Colors.primaryDark },
+  iconBtn: { padding: 8, backgroundColor: 'white', borderRadius: 12 },
+  
+  scroll: { paddingHorizontal: 24, paddingBottom: 100 },
+
+  profileCard: { 
+    backgroundColor: 'white', borderRadius: 24, padding: 24, alignItems: 'center', marginBottom: 30,
+    shadowColor: Colors.shadow, shadowOpacity: 0.1, shadowRadius: 20, elevation: 5
+  },
+  avatar: { 
+    width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.primary, 
+    justifyContent: 'center', alignItems: 'center', marginBottom: 16,
+    shadowColor: Colors.primary, shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: {width: 0, height: 5}
+  },
+  avatarText: { fontSize: 32, fontWeight: '700', color: 'white' },
+  name: { fontSize: 20, fontWeight: '800', color: Colors.primaryDark },
+  handle: { fontSize: 14, color: Colors.primary, fontWeight: '600', marginBottom: 24 },
+  
+  statsRow: { flexDirection: 'row', width: '100%', justifyContent: 'space-around' },
+  statItem: { alignItems: 'center' },
+  statValue: { fontSize: 22, fontWeight: '800', color: Colors.primaryDark },
+  statLabel: { fontSize: 12, color: Colors.textDim, fontWeight: '600' },
+  divider: { width: 1, height: '80%', backgroundColor: Colors.border },
+
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: Colors.primaryDark, marginBottom: 16 },
+  badgesContainer: { gap: 12 },
+  badgeCard: { 
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 16, borderRadius: 16, gap: 16,
+    shadowColor: Colors.shadow, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2
+  },
+  lockedCard: { opacity: 0.6, backgroundColor: '#F8FAFC' },
+  iconBox: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 },
+  badgeTitle: { fontSize: 15, fontWeight: '700', color: Colors.primaryDark },
+  badgeDesc: { fontSize: 12, color: Colors.textDim },
+
+  resetBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, padding: 20, marginTop: 20 },
+  resetText: { color: Colors.error, fontWeight: '700' }
 });

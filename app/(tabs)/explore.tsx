@@ -1,21 +1,28 @@
-import { Header } from '@/components/Header'; // FIX: Use shared Header component
+import { Header } from '@/components/Header';
 import { Colors } from '@/constants/Colors';
-import { quizzes } from '@/constants/quizzes'; // FIX: Use consolidated data source
+import { quizzes } from '@/constants/quizzes';
 import { slugify } from '@/utils/slugify';
 import { useRouter } from 'expo-router';
-import { Braces, ChevronRight, Code, Hash, Layers, Search } from 'lucide-react-native';
+import { Braces, Code, Cpu, Hash, Layers, Search, Server, Terminal } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 
-const topicMetadata: Record<string, { icon: React.ReactNode; color: string }> = {
-  'core-concepts-complexity': { icon: <Hash size={20} color="#3F20F0" />, color: '#F6F5FF' },
-  'linked-lists': { icon: <Code size={20} color="#FF5C95" />, color: '#FFF0F5' },
-  'stacks-queues': { icon: <Layers size={20} color="#FFB800" />, color: '#FFF9E6' },
-  'sorting-algorithms': { icon: <Braces size={20} color="#00C48C" />, color: '#E6FAF4' },
-  'hash-maps-sets': { icon: <Search size={20} color="#7D5FFF" />, color: '#F2F0FF' },
-  'trees-heaps': { icon: <Hash size={20} color="#FF9F43" />, color: '#FFF5ED' },
-  'graphs': { icon: <Code size={20} color="#3F20F0" />, color: '#F6F5FF' },
-  'advanced-techniques': { icon: <Layers size={20} color="#FF5C95" />, color: '#FFF0F5' },
+const TOPIC_ICONS: Record<string, any> = {
+  'core-concepts-complexity': <Cpu size={24} color={Colors.primary} />,
+  'linked-lists':             <Code size={24} color={Colors.primary} />,
+  'stacks-queues':            <Layers size={24} color={Colors.primary} />,
+  'sorting-algorithms':       <Hash size={24} color={Colors.primary} />,
+  'hash-maps-sets':           <Search size={24} color={Colors.primary} />,
+  'trees-heaps':              <Server size={24} color={Colors.primary} />,
+  'graphs':                   <Terminal size={24} color={Colors.primary} />,
+  'advanced-techniques':      <Braces size={24} color={Colors.primary} />,
+};
+
+const getDifficulty = (topic: string) => {
+  const t = topic.toLowerCase();
+  if (t.includes('core') || t.includes('linked')) return 'Easy';
+  if (t.includes('tree') || t.includes('graph') || t.includes('advanced')) return 'Hard';
+  return 'Medium';
 };
 
 export default function ExploreScreen() {
@@ -24,24 +31,25 @@ export default function ExploreScreen() {
   const [activeFilter, setActiveFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
 
   const language = 'javascript';
-  // FIX: Fetch data from the new, reliable consolidated source
-  const allTopics = quizzes[language as keyof typeof quizzes]?.dsa || []; 
+  const rawTopics = quizzes[language as keyof typeof quizzes]?.dsa || [];
+
+  const allTopics = rawTopics.map(t => ({
+    ...t,
+    difficulty: getDifficulty(t.topic)
+  }));
 
   const filteredTopics = allTopics.filter(module => {
     const matchesSearch = module.topic.toLowerCase().includes(searchQuery.toLowerCase());
-    // FIX: module.difficulty is now correctly available
-    const matchesFilter = activeFilter === 'All' || module.difficulty === activeFilter; 
+    const matchesFilter = activeFilter === 'All' || module.difficulty === activeFilter;
     return matchesSearch && matchesFilter;
   });
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
-      {/* FIX: Replaced manual large header with shared Header component */}
-      <Header title="Explore Topics" showBack={false} style={{paddingBottom: 0}} />
+      <Header title="Library" showBack={false} style={styles.header} />
 
-      <View style={styles.searchContainer}>
+      <View style={styles.controlsContainer}>
         <View style={styles.searchBar}>
           <Search size={20} color={Colors.textDim} />
           <TextInput
@@ -53,54 +61,50 @@ export default function ExploreScreen() {
           />
         </View>
         
-        {/* FILTERS */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{gap: 8, paddingRight: 20}}>
-          {['All', 'Easy', 'Medium', 'Hard'].map((filter) => (
-            <Pressable 
-              key={filter} 
-              style={[styles.filterChip, activeFilter === filter && styles.filterChipActive]}
-              onPress={() => setActiveFilter(filter as any)}
-            >
-              <Text style={[styles.filterText, activeFilter === filter && styles.filterTextActive]}>{filter}</Text>
-            </Pressable>
-          ))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+          {['All', 'Easy', 'Medium', 'Hard'].map((filter) => {
+            const isActive = activeFilter === filter;
+            return (
+              <Pressable 
+                key={filter} 
+                style={[styles.filterChip, isActive && styles.filterChipActive]}
+                onPress={() => setActiveFilter(filter as any)}
+              >
+                <Text style={[styles.filterText, isActive && styles.filterTextActive]}>{filter}</Text>
+              </Pressable>
+            );
+          })}
         </ScrollView>
       </View>
 
-      <ScrollView contentContainerStyle={styles.list}>
-        <Text style={styles.sectionTitle}>
-          {searchQuery ? `Search Results` : `${activeFilter} Topics`}
-        </Text>
+      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {filteredTopics.map((module) => {
           const slug = slugify(module.topic);
-          const metadata = topicMetadata[slug] || { icon: <Code size={20} color={Colors.textDim} />, color: '#F0F0F0' };
-          const difficulty = module.difficulty || 'Medium';
+          const icon = TOPIC_ICONS[slug] || <Code size={24} color={Colors.primary} />;
           
+          let badgeColor = Colors.primary + '15'; // 15% opacity
+          let badgeText = Colors.primary;
+          
+          if (module.difficulty === 'Hard') { badgeColor = '#FFF5F5'; badgeText = '#E53E3E'; }
+          if (module.difficulty === 'Medium') { badgeColor = '#FFFBEB'; badgeText = '#D97706'; }
+
           return (
             <Pressable 
               key={slug} 
-              style={[
-                styles.card, 
-                // UI FIX: Apply the unique metadata color for visual distinction
-                { backgroundColor: metadata.color } 
-              ]} 
+              style={styles.card} 
               onPress={() => router.push(`/quiz/${slug}`)}
             >
-              {/* Icon box is explicitly white for contrast */}
-              <View style={[styles.iconBox, { backgroundColor: 'white' }]}>
-                {metadata.icon}
-              </View>
-              <View style={styles.info}>
-                <Text style={styles.cardTitle}>{module.topic}</Text>
-                <View style={{flexDirection: 'row', gap: 8, marginTop: 4}}>
-                   <Text style={styles.cardSubtitle}>{module.questions.length} Lessons</Text>
-                   {/* Updated difficulty badge color logic for better theme adherence */}
-                   <View style={[styles.badge, difficulty === 'Easy' ? {backgroundColor: '#E7FFDB'} : difficulty === 'Hard' ? {backgroundColor: Colors.errorDark + '20'} : {backgroundColor: '#FFF9E6'}]}>
-                      <Text style={{fontSize: 10, fontWeight: '700', color: Colors.text}}>{difficulty}</Text>
-                   </View>
+              <View style={styles.cardLeft}>
+                <View style={styles.iconBox}>{icon}</View>
+                <View>
+                  <Text style={styles.cardTitle}>{module.topic}</Text>
+                  <Text style={styles.cardSubtitle}>{module.questions.length} Concepts</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color={Colors.textDim} />
+              
+              <View style={[styles.badge, { backgroundColor: badgeColor }]}>
+                <Text style={[styles.badgeText, { color: badgeText }]}>{module.difficulty}</Text>
+              </View>
             </Pressable>
           );
         })}
@@ -111,34 +115,41 @@ export default function ExploreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  // Removed manual header/title styles
-  searchContainer: { paddingHorizontal: 24, marginVertical: 20 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F2F2F7', paddingHorizontal: 16, height: 50, borderRadius: 16, marginBottom: 12 },
-  input: { flex: 1, marginLeft: 10, fontSize: 16, color: Colors.text, height: '100%' },
-  filterRow: { flexDirection: 'row' },
-  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E5E5' },
-  filterChipActive: { backgroundColor: Colors.text, borderColor: Colors.text },
-  filterText: { fontWeight: '600', color: Colors.text },
-  filterTextActive: { color: 'white' },
-  list: { paddingHorizontal: 24, paddingBottom: 100 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: Colors.text, marginBottom: 16 },
-  // Distinct card style for Explore screen
-  card: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    padding: 16, 
-    borderRadius: 20, 
-    marginBottom: 12, 
-    borderWidth: 2, 
-    borderColor: '#E0EEED', // Added thicker border for contrast
-    shadowColor: '#000', 
-    shadowOpacity: 0.05, 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowRadius: 8,
+  header: { backgroundColor: Colors.background, borderBottomWidth: 0 },
+  
+  controlsContainer: { paddingHorizontal: 24, paddingBottom: 20 },
+  searchBar: { 
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', 
+    paddingHorizontal: 16, height: 50, borderRadius: 16, marginBottom: 16,
+    shadowColor: Colors.shadow, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2
   },
-  iconBox: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16, backgroundColor: 'white' },
-  info: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
+  input: { flex: 1, marginLeft: 12, fontSize: 16, color: Colors.primaryDark },
+  
+  filterRow: { gap: 12 },
+  filterChip: { 
+    paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, 
+    backgroundColor: 'white', borderWidth: 1, borderColor: 'transparent'
+  },
+  filterChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  filterText: { fontSize: 14, fontWeight: '600', color: Colors.textDim },
+  filterTextActive: { color: 'white' },
+
+  list: { paddingHorizontal: 24, paddingBottom: 100 },
+  
+  card: { 
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 16, borderRadius: 20, marginBottom: 16, 
+    backgroundColor: 'white',
+    shadowColor: Colors.shadow, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2
+  },
+  cardLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  iconBox: { 
+    width: 50, height: 50, borderRadius: 14, 
+    backgroundColor: Colors.background, justifyContent: 'center', alignItems: 'center' 
+  },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: Colors.primaryDark, marginBottom: 4 },
   cardSubtitle: { fontSize: 13, color: Colors.textDim },
-  badge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  badgeText: { fontSize: 11, fontWeight: '700' }
 });

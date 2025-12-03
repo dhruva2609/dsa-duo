@@ -1,27 +1,35 @@
 import { useUser } from '@/app/context/UserContext';
+import { Colors } from '@/constants/Colors';
 import { quizzes } from '@/constants/quizzes';
 import { slugify } from '@/utils/slugify';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useTheme } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { Check, Lock, Play } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Modal, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
-const topicIcons: Record<string, { name: string; color: string }> = {
-  'core-concepts-complexity': { name: 'code-braces', color: '#6366F1' },
-  'linked-lists': { name: 'link-variant', color: '#EC4899' },
-  'stacks-queues': { name: 'layers', color: '#F59E0B' },
-  'sorting-algorithms': { name: 'sort', color: '#14B8A6' },
-  'hash-maps-sets': { name: 'magnify', color: '#8B5CF6' },
-  'trees-heaps': { name: 'tree', color: '#10B981' },
-  'graphs': { name: 'network', color: '#3B82F6' },
-  'advanced-techniques': { name: 'flash', color: '#F97316' },
+const { width } = Dimensions.get('window');
+const NODE_SIZE = 80;
+const NODE_MARGIN = 30;
+
+const OFFSETS = [0, -1, -1.5, 0, 1, 1.5];
+
+// Modern Tech Icons
+const TOPIC_ICONS: Record<string, string> = {
+  'core-concepts-complexity': 'code-braces',
+  'linked-lists': 'link-variant',
+  'stacks-queues': 'layers',
+  'sorting-algorithms': 'sort',
+  'hash-maps-sets': 'magnify',
+  'trees-heaps': 'tree',
+  'graphs': 'network',
+  'advanced-techniques': 'flash',
 };
 
 const HomeScreen = () => {
   const { user, xp, streakCount, isLoaded, completedLevels, updateStreak } = useUser();
   const router = useRouter();
-  const { colors } = useTheme();
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
@@ -33,7 +41,6 @@ const HomeScreen = () => {
   }, [isLoaded]);
 
   const language = 'javascript';
-  // Use 'dsa' from quizzes as the main topic source
   const topics = (quizzes[language as keyof typeof quizzes]?.dsa ?? []) as { topic: string }[];
 
   const handleChoice = (choice: 'study' | 'quiz') => {
@@ -47,100 +54,160 @@ const HomeScreen = () => {
     setSelectedTopic(null);
   };
 
-  const isTopicCompleted = (slug: string) => completedLevels.includes(slug);
-  
-  // Filter topics into two separate lists
-  const completedTopics = topics.filter((topic) => isTopicCompleted(slugify(topic.topic)));
-  const newTopics = topics.filter((topic) => !isTopicCompleted(slugify(topic.topic)));
+  const generatePath = () => {
+    const startY = 60;
+    let path = `M ${width / 2} ${startY + NODE_SIZE / 2}`; 
+    
+    topics.forEach((_, index) => {
+      if (index === topics.length - 1) return;
+      
+      const currentX = (width / 2) + (OFFSETS[index % OFFSETS.length] * 60);
+      const startYNode = startY + (index * (NODE_SIZE + NODE_MARGIN)) + (NODE_SIZE / 2);
+      
+      const nextX = (width / 2) + (OFFSETS[(index + 1) % OFFSETS.length] * 60);
+      const endYNode = startY + ((index + 1) * (NODE_SIZE + NODE_MARGIN)) + (NODE_SIZE / 2);
+
+      const controlY = (startYNode + endYNode) / 2;
+      path += ` C ${currentX} ${controlY}, ${nextX} ${controlY}, ${nextX} ${endYNode}`;
+    });
+    return path;
+  };
 
   if (!isLoaded) return <View style={styles.loading}><Text>Loading...</Text></View>;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
+      
+      {/* Dashboard Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Hi, {user?.name || 'Dev'}</Text>
+          <Text style={styles.subGreeting}>Continue your path</Text>
+        </View>
+        <View style={styles.statsRow}>
+          <View style={styles.statPill}>
+            <MaterialCommunityIcons name="flash" size={18} color={Colors.warning} />
+            <Text style={styles.statText}>{xp}</Text>
+          </View>
+          <View style={styles.statPill}>
+            <MaterialCommunityIcons name="fire" size={18} color={Colors.error} />
+            <Text style={styles.statText}>{streakCount}</Text>
+          </View>
+        </View>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.greeting, { color: colors.text }]}>Hello, {user?.name || 'Guest'}</Text>
-          <Text style={[styles.subGreeting, { color: colors.text }]}>Let's learn something new today!</Text>
+        
+        {/* Path Line */}
+        <View style={styles.svgContainer} pointerEvents="none">
+          <Svg width={width} height={topics.length * 150}>
+            <Path
+              d={generatePath()}
+              stroke={Colors.primary} // Indigo path
+              strokeWidth="6"
+              strokeDasharray="10, 10" // Dashed line looks more techie
+              strokeOpacity={0.2}
+              strokeLinecap="round"
+              fill="none"
+            />
+          </Svg>
         </View>
 
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <View style={[styles.statBox, { backgroundColor: colors.card }]}>
-            <MaterialCommunityIcons name="flash" size={24} color="#6366F1" />
-            <Text style={[styles.statValue, { color: colors.text }]}>{xp} XP</Text>
-          </View>
-          <View style={[styles.statBox, { backgroundColor: colors.card }]}>
-            <MaterialCommunityIcons name="fire" size={24} color="#FFD700" />
-            <Text style={[styles.statValue, { color: colors.text }]}>{streakCount} Day Streak</Text>
-          </View>
-        </View>
-
-        {/* Continue Learning - Only show completed topics here */}
-        {completedTopics.length > 0 && (
-          <>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Continue Learning</Text>
-            {completedTopics.map((topic) => {
-              const slug = slugify(topic.topic);
-              const iconData = topicIcons[slug] || { name: 'book', color: '#6366F1' };
-              return (
-                <TouchableOpacity key={`continue-${slug}`} style={[styles.card, { backgroundColor: colors.card, borderColor: '#14B8A6' }]} onPress={() => setSelectedTopic(slug)}>
-                  <View style={[styles.iconBox, { backgroundColor: `${iconData.color}20` }]}>
-                    <MaterialCommunityIcons name="check-bold" size={24} color={'#14B8A6'} />
-                  </View>
-                  <View style={styles.textContainer}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>{topic.topic}</Text>
-                    <Text style={[styles.cardSubtitle, { color: colors.text }]}>Module completed. Keep the streak alive!</Text>
-                  </View>
-                  <MaterialCommunityIcons name="refresh" size={24} color={colors.text} />
-                </TouchableOpacity>
-              );
-            })}
-          </>
-        )}
-
-        {/* New Topics - Only show topics NOT yet completed (distinct UI from Explore) */}
-        <Text style={[styles.sectionTitle, { color: colors.text, marginTop: completedTopics.length > 0 ? 30 : 0 }]}>New Topics</Text>
-        {newTopics.map((topic) => {
+        {/* Nodes */}
+        {topics.map((topic, index) => {
           const slug = slugify(topic.topic);
-          const iconData = topicIcons[slug] || { name: 'book', color: '#6366F1' };
+          const icon = TOPIC_ICONS[slug] || 'book';
+          
+          const isCompleted = completedLevels.includes(slug);
+          const isUnlocked = index === 0 || completedLevels.includes(slugify(topics[index - 1].topic));
+          const isActive = isUnlocked && !isCompleted;
+          
+          const xOffset = OFFSETS[index % OFFSETS.length] * 60;
+
+          // Colors based on state
+          let bg = 'white';
+          let iconColor = Colors.textDim;
+          let border = 'transparent';
+          let elevation = 2;
+
+          if (isActive) {
+            bg = Colors.primary;
+            iconColor = 'white';
+            elevation = 10;
+          } else if (isCompleted) {
+            bg = Colors.success; // Mint Green
+            iconColor = 'white';
+          } else if (isUnlocked) {
+            bg = 'white';
+            iconColor = Colors.primary;
+            border = Colors.primary;
+          }
+
           return (
-            <TouchableOpacity key={slug} style={[styles.card, { backgroundColor: colors.card }]} onPress={() => setSelectedTopic(slug)}>
-              <View style={[styles.iconBox, { backgroundColor: `${iconData.color}20` }]}>
-                <MaterialCommunityIcons name={iconData.name as any} size={24} color={iconData.color} />
-              </View>
-              <View style={styles.textContainer}>
-                <Text style={[styles.cardTitle, { color: colors.text }]}>{topic.topic}</Text>
-                <Text style={[styles.cardSubtitle, { color: colors.text }]}>Start learning concepts to earn XP.</Text>
-              </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color={colors.text} />
-            </TouchableOpacity>
+            <View key={slug} style={[styles.nodeWrapper, { transform: [{ translateX: xOffset }] }]}>
+              {isActive && (
+                <View style={styles.floatingLabel}>
+                  <Text style={styles.labelText}>START</Text>
+                  <View style={styles.triangle} />
+                </View>
+              )}
+              
+              <TouchableOpacity 
+                activeOpacity={isUnlocked ? 0.7 : 1}
+                onPress={() => isUnlocked ? setSelectedTopic(slug) : null}
+                style={[
+                  styles.circle, 
+                  { backgroundColor: bg, borderColor: border, borderWidth: border !== 'transparent' ? 3 : 0, elevation }
+                ]}
+              >
+                {isCompleted ? (
+                  <Check size={32} color="white" strokeWidth={3} />
+                ) : isActive ? (
+                  <Play size={32} color="white" fill="white" />
+                ) : isUnlocked ? (
+                  <MaterialCommunityIcons name={icon as any} size={30} color={Colors.primary} />
+                ) : (
+                  <Lock size={24} color={Colors.textDim} />
+                )}
+              </TouchableOpacity>
+              
+              <Text style={[
+                styles.topicTitle, 
+                { color: isUnlocked ? Colors.primaryDark : Colors.textDim, fontWeight: isActive ? '800' : '600' }
+              ]}>
+                {topic.topic}
+              </Text>
+            </View>
           );
         })}
       </ScrollView>
 
-      {/* Choice Modal */}
-      <Modal transparent visible={selectedTopic !== null} animationType="slide" onRequestClose={() => setSelectedTopic(null)}>
+      {/* Modal matching new theme */}
+      <Modal transparent visible={selectedTopic !== null} animationType="fade" onRequestClose={() => setSelectedTopic(null)}>
         <Pressable style={styles.modalOverlay} onPress={() => setSelectedTopic(null)}>
-          <View style={[styles.bottomSheet, { backgroundColor: colors.card }]}>
-            <Text style={[styles.modalTitle, { color: colors.primary }]}>What would you like to do?</Text>
-            <TouchableOpacity style={[styles.choiceBtn, { backgroundColor: colors.primary }]} onPress={() => handleChoice('study')}>
-              <Text style={styles.choiceText}>📚 Study Theory</Text>
+          <View style={styles.bottomSheet}>
+            <Text style={styles.modalTitle}>Ready to learn?</Text>
+            
+            <TouchableOpacity style={styles.choiceBtn} onPress={() => handleChoice('study')}>
+              <View style={[styles.iconBox, { backgroundColor: '#E0E5F2' }]}>
+                <Text style={{fontSize: 20}}>📚</Text>
+              </View>
+              <View>
+                <Text style={styles.choiceTitle}>Read Theory</Text>
+                <Text style={styles.choiceDesc}>Master the concepts first</Text>
+              </View>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.choiceBtn, { backgroundColor: colors.primary }]} onPress={() => handleChoice('quiz')}>
-              <Text style={styles.choiceText}>✏️ Start Quiz</Text>
+            
+            <TouchableOpacity style={styles.choiceBtn} onPress={() => handleChoice('quiz')}>
+              <View style={[styles.iconBox, { backgroundColor: Colors.primary + '20' }]}>
+                <Text style={{fontSize: 20}}>⚡️</Text>
+              </View>
+              <View>
+                <Text style={styles.choiceTitle}>Start Quiz</Text>
+                <Text style={styles.choiceDesc}>Test your skills now</Text>
+              </View>
             </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
-
-      {/* Streak Modal */}
-      <Modal transparent visible={showStreakModal} animationType="fade" onRequestClose={() => setShowStreakModal(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowStreakModal(false)}>
-          <View style={[styles.streakCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.modalTitle, { color: colors.primary }]}>🔥 Daily Streak!</Text>
-            <Text style={{ textAlign: 'center', color: colors.text }}>You've maintained a streak of {streakCount} days!</Text>
           </View>
         </Pressable>
       </Modal>
@@ -149,58 +216,63 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: Colors.background },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scrollContent: { padding: 20, paddingBottom: 100 }, 
-  header: { marginBottom: 24, marginTop: 10 },
-  greeting: { fontSize: 28, fontWeight: '700' },
-  subGreeting: { fontSize: 16, opacity: 0.7 },
-  statsContainer: { flexDirection: 'row', gap: 12, marginBottom: 32 },
-  statBox: { 
-    flex: 1, 
-    padding: 16, 
-    borderRadius: 16, 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    // Added elevation/shadow for prominence on Home screen
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+  
+  header: { 
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 24, paddingTop: 10, paddingBottom: 10, backgroundColor: Colors.background, zIndex: 10
   },
-  statValue: { fontSize: 16, fontWeight: '700', marginTop: 8 },
-  sectionTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
-  card: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    padding: 16, 
-    borderRadius: 16, 
-    marginBottom: 12,
-    borderWidth: 1, // Added border for clarity
-    borderColor: '#F0F0F0',
-    // Removed the strong shadows found on Explore screen cards for a softer look
+  greeting: { fontSize: 24, fontWeight: '700', color: Colors.primaryDark },
+  subGreeting: { fontSize: 14, color: Colors.textDim, fontWeight: '500' },
+  
+  statsRow: { flexDirection: 'row', gap: 12 },
+  statPill: { 
+    flexDirection: 'row', alignItems: 'center', gap: 6, 
+    backgroundColor: 'white', paddingHorizontal: 12, paddingVertical: 8, 
+    borderRadius: 20, shadowColor: Colors.shadow, shadowOpacity: 0.1, shadowRadius: 10, elevation: 2
   },
-  iconBox: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
-  textContainer: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: '600' },
-  cardSubtitle: { fontSize: 13, opacity: 0.6 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  bottomSheet: { padding: 24, paddingBottom: 40, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  streakCard: { margin: 40, padding: 24, borderRadius: 20, alignItems: 'center', alignSelf: 'center', justifyContent: 'center' },
-  modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
+  statText: { fontSize: 14, fontWeight: '700', color: Colors.primaryDark },
+  
+  scrollContent: { paddingBottom: 100, paddingTop: 60, alignItems: 'center' },
+  svgContainer: { position: 'absolute', top: 0, left: 0, right: 0 },
+  
+  nodeWrapper: { alignItems: 'center', marginBottom: NODE_MARGIN, width: 140 },
+  circle: {
+    width: NODE_SIZE, height: NODE_SIZE, borderRadius: NODE_SIZE / 2,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: Colors.primary, shadowOpacity: 0.3, shadowOffset: { width: 0, height: 8 }, shadowRadius: 15,
+    marginBottom: 10
+  },
+  topicTitle: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
+  
+  floatingLabel: {
+    position: 'absolute', top: -40, backgroundColor: Colors.primaryDark,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12,
+    zIndex: 2, shadowColor: Colors.primaryDark, shadowOpacity: 0.3, shadowRadius: 8
+  },
+  labelText: { color: 'white', fontWeight: 'bold', fontSize: 12, letterSpacing: 1 },
+  triangle: {
+    width: 0, height: 0, backgroundColor: 'transparent', borderStyle: 'solid',
+    borderLeftWidth: 6, borderRightWidth: 6, borderTopWidth: 6,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: Colors.primaryDark,
+    alignSelf: 'center', position: 'absolute', bottom: -6
+  },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(27, 37, 89, 0.4)', justifyContent: 'center', padding: 24 },
+  bottomSheet: { 
+    padding: 24, borderRadius: 24, backgroundColor: 'white', 
+    shadowColor: Colors.shadow, shadowOpacity: 0.2, shadowRadius: 20, elevation: 10 
+  },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: Colors.primaryDark, marginBottom: 20, textAlign: 'center' },
+  
   choiceBtn: { 
-    padding: 16, 
-    borderRadius: 14, 
-    alignItems: 'center', 
-    marginBottom: 12,
-    shadowColor: '#000', // Added button shadow
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, 
+    marginBottom: 12, gap: 16, backgroundColor: 'white', borderWidth: 1, borderColor: Colors.border
   },
-  choiceText: { color: 'white', fontWeight: '700', fontSize: 16 },
+  iconBox: { width: 48, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  choiceTitle: { fontSize: 16, fontWeight: '700', color: Colors.primaryDark },
+  choiceDesc: { fontSize: 13, color: Colors.textDim }
 });
 
 export default HomeScreen;

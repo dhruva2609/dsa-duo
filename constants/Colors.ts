@@ -1,28 +1,26 @@
 // constants/Colors.ts
 
 export const Colors = {
-  // Brand Colors (Podkest Theme)
-  primary: '#3F20F0',       // Electric Purple
-  primaryDark: '#2a12b3',   // Darker Purple for shadows/pressed states
-  accentPink: '#FF5C95',    // Accent for badges/highlights
-
+  // Brand Colors (Deep Indigo Theme)
+  primary: '#4318FF',       // Vibrant Indigo (Active buttons, highlights)
+  primaryDark: '#2B3674',   // Deep Navy (Headings, strong text)
+  secondary: '#7551FF',     // Lighter Indigo (Accents)
+  
   // Backgrounds
-  background: '#FFFFFF',
-  cardBackground: '#F6F5FF', // Very light purple for cards/background blobs
-
+  background: '#F4F7FE',    // The signature light blue-grey background
+  card: '#FFFFFF',          // Pure white cards
+  
   // Text
-  text: '#110F24',          // Dark Navy (Main Text)
-  textDim: '#8A899C',       // Grey (Subtitles/Locked states)
-  textLight: '#FFFFFF',     // White text
+  text: '#1B2559',          // Dark Navy (Main Text - High Contrast)
+  textDim: '#A3AED0',       // Cool Grey (Subtitles - Low Contrast)
+  textLight: '#FFFFFF',     // White text on dark buttons
 
-  // Functional Colors (kept for Quiz logic)
-  success: '#58cc02',       // Green
-  successDark: '#46a302',
-  error: '#ff4b4b',         // Red
-  errorDark: '#ea2b2b',
+  // Functional Colors
+  success: '#05CD99',       // Minty Green (Modern success)
+  error: '#EE5D50',         // Soft Red
+  warning: '#FFCE20',       // Amber
   
   // UI Elements
-  border: '#E0E0E0',
-  locked: '#F2F2F7',        // Light grey for locked items
-  path: '#E0E0E0',          // The zigzag line color
+  border: '#E0E5F2',        // Very subtle border
+  shadow: '#7090B0',        // Shadow color for that "soft" look
 };
