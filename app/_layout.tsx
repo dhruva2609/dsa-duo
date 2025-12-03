@@ -3,6 +3,7 @@ import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 export const unstable_settings = {
@@ -20,6 +21,7 @@ function RootLayoutNav() {
       {/* NEW ROUTES */}
       <Stack.Screen name="review" options={{ headerShown: false }} />
       <Stack.Screen name="playground" options={{ headerShown: false }} />
+      <Stack.Screen name="blitz" options={{ headerShown: false }} />
       
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
@@ -29,11 +31,13 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <UserProvider>
-      <ThemeProvider value={DefaultTheme}>
-        <RootLayoutNav />
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </UserProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}> 
+      <UserProvider>
+        <ThemeProvider value={DefaultTheme}>
+          <RootLayoutNav />
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </UserProvider>
+    </GestureHandlerRootView>
   );
 }

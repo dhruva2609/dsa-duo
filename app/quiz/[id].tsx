@@ -1,54 +1,36 @@
 import { useUser } from '@/app/context/UserContext';
 import CodeBlock from '@/components/CodeBlock';
-import { Colors } from '@/constants/Colors'; // Explicitly import Colors for functional colors
+import { Colors } from '@/constants/Colors';
 import { quizzes } from '@/constants/quizzes';
 import { slugify } from '@/utils/slugify';
-import { useTheme } from '@react-navigation/native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const QuizScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
-  // Include addMistake to log wrong answers
-  const { deductHeart, addXp, completeLevel, hearts, addMistake } = useUser(); 
+  const { deductHeart, addXp, completeLevel, hearts, addMistake, isDark } = useUser(); 
+  
+  const theme = isDark ? Colors.dark : Colors.light;
 
-  // 1. Logic Change: ADDED Heart Check
   useEffect(() => {
     if (hearts <= 0) {
       router.replace('/game-over');
     }
-  }, [hearts, router]); // Added router to dependencies
+  }, [hearts, router]);
 
   const language = 'javascript'; 
-  const allQuizzes = quizzes[language as keyof typeof quizzes];
-  // Access data from the consolidated source
-  const topicData = (allQuizzes as any)?.dsa?.find((t: any) => slugify(t.topic) === id);
+  const topicData = (quizzes[language as keyof typeof quizzes]?.dsa ?? []).find((t: any) => slugify(t.topic) === id);
   
-  // Safety check for topic
-  if (!topicData) {
-    return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
-        <Text style={{ color: colors.text, fontSize: 18 }}>Topic not found.</Text>
-        <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: Colors.primary }]}>
-          <Text style={{color: 'white', fontWeight: 'bold'}}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  if (!topicData) return null;
 
   const [questions] = useState(topicData.questions || []);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
-
-  // Safety check for questions
-  if (questions.length === 0) {
-    return <View style={[styles.centered, { backgroundColor: colors.background }]}><Text style={{ color: colors.text }}>No questions available.</Text></View>;
-  }
 
   const handleOptionPress = (option: string) => {
     if (showExplanation) return;
@@ -60,7 +42,6 @@ const QuizScreen = () => {
     
     if (!correct) {
         deductHeart();
-        // Add mistake to list for review screen
         addMistake({
           q: currentQuestion.q,
           options: currentQuestion.options,
@@ -87,18 +68,26 @@ const QuizScreen = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}}>
-      <Stack.Screen options={{ title: topicData.topic, headerBackTitle: 'Back' }} />
-      <ScrollView contentContainerStyle={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      {/* Custom Header */}
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <ChevronLeft size={24} color={theme.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>{topicData.topic}</Text>
+        <View style={{width: 24}} /> 
+      </View>
+
+      <ScrollView contentContainerStyle={styles.content}>
         {/* Progress Bar */}
-        <View style={styles.progressBarBg}>
-          {/* Use primary color from theme colors */}
-          <View style={[styles.progressBarFill, {width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`, backgroundColor: colors.primary}]} />
+        <View style={[styles.progressBarBg, { backgroundColor: theme.border }]}>
+          <View style={[styles.progressBarFill, { width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`, backgroundColor: theme.primary }]} />
         </View>
 
-        <Text style={[styles.question, { color: colors.text }]}>{currentQuestion.q}</Text>
+        <Text style={[styles.question, { color: theme.text }]}>{currentQuestion.q}</Text>
 
-        {/* Check for code block content using backticks */}
         {currentQuestion.q.includes('`') && (
             <CodeBlock code={currentQuestion.q.split('`')[1]} />
         )}
@@ -108,8 +97,7 @@ const QuizScreen = () => {
             key={option}
             style={[
               styles.option,
-              { backgroundColor: colors.card, borderColor: colors.border }, 
-              // Apply specific colors only when selected and in explanation phase
+              { backgroundColor: theme.card, borderColor: theme.border }, 
               selectedOption === option && (isCorrect ? styles.correct : styles.incorrect),
             ]}
             onPress={() => handleOptionPress(option)}
@@ -118,11 +106,8 @@ const QuizScreen = () => {
             <Text 
               style={[
                 styles.optionText, 
-                { color: colors.text },
-                // Apply specific text color for feedback
-                selectedOption === option && isCorrect !== null && { 
-                  color: isCorrect ? Colors.successDark : Colors.errorDark 
-                }
+                { color: theme.text },
+                selectedOption === option && isCorrect !== null && { color: isCorrect ? '#006400' : '#8B0000' }
               ]}
             >
               {option}
@@ -131,18 +116,12 @@ const QuizScreen = () => {
         ))}
 
         {showExplanation && (
-          <View 
-            style={[
-              styles.explanation, 
-              // FIX: Use brand colors for a more cohesive UI response
-              { backgroundColor: isCorrect ? Colors.success + '15' : Colors.error + '15' } 
-            ]}
-          >
-            <Text style={{ color: isCorrect ? Colors.successDark : Colors.errorDark, fontWeight: 'bold', fontSize: 18, marginBottom: 8 }}>
+          <View style={[styles.explanation, { backgroundColor: isCorrect ? 'rgba(5, 205, 153, 0.15)' : 'rgba(238, 93, 80, 0.15)' }]}>
+            <Text style={{ color: isCorrect ? Colors.success : Colors.error, fontWeight: '800', fontSize: 18, marginBottom: 8 }}>
                 {isCorrect ? 'Correct!' : 'Incorrect'}
             </Text>
-            <Text style={{ color: colors.text, lineHeight: 22 }}>{currentQuestion.explanation}</Text>
-            <TouchableOpacity style={[styles.nextButton, { backgroundColor: colors.primary }]} onPress={handleNext}>
+            <Text style={{ color: theme.text, lineHeight: 22 }}>{currentQuestion.explanation}</Text>
+            <TouchableOpacity style={[styles.nextButton, { backgroundColor: theme.primary }]} onPress={handleNext}>
               <Text style={{ color: 'white', fontWeight: 'bold' }}>
                 {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Finish Quiz'}
               </Text>
@@ -155,42 +134,21 @@ const QuizScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  container: { padding: 20, paddingBottom: 50 },
-  progressBarBg: { height: 8, backgroundColor: '#E0E0E0', borderRadius: 5, marginBottom: 24, width: '100%' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, paddingTop: 10, borderBottomWidth: 1 },
+  backBtn: { padding: 4 },
+  headerTitle: { fontSize: 18, fontWeight: '700', flex: 1, textAlign: 'center' },
+  content: { padding: 20, paddingBottom: 50 },
+  progressBarBg: { height: 8, borderRadius: 5, marginBottom: 24, width: '100%' },
   progressBarFill: { height: '100%', borderRadius: 5 },
   question: { fontSize: 22, fontWeight: '700', textAlign: 'left', marginBottom: 24, lineHeight: 30 },
-  option: { 
-    padding: 20, 
-    borderRadius: 16, 
-    marginBottom: 12, 
-    borderWidth: 2, 
-    // Default border/background colors are set in JSX using theme
-  },
-  optionText: { fontSize: 16, fontWeight: '500' },
-  // Use Colors from constants for uniform brand feedback styling
-  correct: { backgroundColor: Colors.success + '15', borderColor: Colors.success }, 
-  incorrect: { backgroundColor: Colors.error + '15', borderColor: Colors.error },
+  option: { padding: 20, borderRadius: 16, marginBottom: 12, borderWidth: 1 },
+  optionText: { fontSize: 16, fontWeight: '600' },
+  correct: { backgroundColor: 'rgba(5, 205, 153, 0.2)', borderColor: Colors.success }, 
+  incorrect: { backgroundColor: 'rgba(238, 93, 80, 0.2)', borderColor: Colors.error },
   explanation: { marginTop: 24, padding: 20, borderRadius: 16 },
-  nextButton: { 
-    marginTop: 20, 
-    padding: 16, 
-    borderRadius: 12, 
-    alignItems: 'center', 
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  // Styled the fallback button for consistency
-  backBtn: { 
-    marginTop: 20, 
-    paddingHorizontal: 24,
-    paddingVertical: 12, 
-    borderRadius: 12,
-    alignItems: 'center',
-  }
+  nextButton: { marginTop: 20, padding: 16, borderRadius: 12, alignItems: 'center' },
 });
 
 export default QuizScreen;
