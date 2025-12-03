@@ -6,7 +6,8 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
 import { Check, Lock, Play } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Modal, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Modal, Pressable, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
@@ -28,6 +29,7 @@ const TOPIC_ICONS: Record<string, string> = {
 export default function HomeScreen() {
   const { user, xp, streakCount, isLoaded, completedLevels, updateStreak, isDark } = useUser();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   
   const theme = isDark ? Colors.dark : Colors.light;
@@ -64,27 +66,28 @@ export default function HomeScreen() {
   if (!isLoaded) return <View style={[styles.loading, {backgroundColor: theme.background}]}><Text style={{color: theme.text}}>Loading...</Text></View>;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       
-      <View style={[styles.header, { backgroundColor: theme.background }]}>
+      {/* Custom Header with Safe Area */}
+      <View style={[styles.header, { backgroundColor: theme.background, paddingTop: insets.top + 10 }]}>
         <View>
           <Text style={[styles.greeting, { color: theme.primaryDark }]}>Hi, {user?.name || 'Dev'}</Text>
           <Text style={[styles.subGreeting, { color: theme.textDim }]}>Continue your path</Text>
         </View>
         <View style={styles.statsRow}>
           <View style={[styles.statPill, { backgroundColor: theme.card, shadowColor: theme.shadow }]}>
-            <MaterialCommunityIcons name="flash" size={18} color={theme.warning} />
+            <MaterialCommunityIcons name="flash" size={18} color={Colors.warning} />
             <Text style={[styles.statText, { color: theme.text }]}>{xp}</Text>
           </View>
           <View style={[styles.statPill, { backgroundColor: theme.card, shadowColor: theme.shadow }]}>
-            <MaterialCommunityIcons name="fire" size={18} color={theme.error} />
+            <MaterialCommunityIcons name="fire" size={18} color={Colors.error} />
             <Text style={[styles.statText, { color: theme.text }]}>{streakCount}</Text>
           </View>
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}>
         <View style={styles.svgContainer} pointerEvents="none">
           <Svg width={width} height={topics.length * 150}>
             <Path
@@ -145,12 +148,12 @@ export default function HomeScreen() {
           );
         })}
       </ScrollView>
-
+      
+      {/* Modal Code (unchanged logic) */}
       <Modal transparent visible={selectedTopic !== null} animationType="fade" onRequestClose={() => setSelectedTopic(null)}>
         <Pressable style={styles.modalOverlay} onPress={() => setSelectedTopic(null)}>
           <View style={[styles.bottomSheet, { backgroundColor: theme.card, shadowColor: theme.shadow }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>Ready to learn?</Text>
-            
             <TouchableOpacity style={[styles.choiceBtn, { backgroundColor: theme.background, borderColor: theme.border }]} onPress={() => handleChoice('study')}>
               <Text style={{fontSize: 24}}>📚</Text>
               <View>
@@ -158,7 +161,6 @@ export default function HomeScreen() {
                 <Text style={[styles.choiceDesc, { color: theme.textDim }]}>Master concepts first</Text>
               </View>
             </TouchableOpacity>
-            
             <TouchableOpacity style={[styles.choiceBtn, { backgroundColor: theme.background, borderColor: theme.border }]} onPress={() => handleChoice('quiz')}>
               <Text style={{fontSize: 24}}>⚡️</Text>
               <View>
@@ -169,14 +171,14 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: 10, paddingBottom: 10, zIndex: 10 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingBottom: 10, zIndex: 10 },
   greeting: { fontSize: 24, fontWeight: '700' },
   subGreeting: { fontSize: 14, fontWeight: '500' },
   statsRow: { flexDirection: 'row', gap: 12 },

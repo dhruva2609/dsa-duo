@@ -16,7 +16,6 @@ export default function LearnScreen() {
   const topicKey = String(id);
   const language = 'javascript'; 
   
-  // Safe data access
   const allQuizzes = quizzes[language as keyof typeof quizzes];
   const topicData = (allQuizzes as any)?.dsa?.find((t: any) => slugify(t.topic) === topicKey);
 
@@ -85,12 +84,9 @@ const styles = StyleSheet.create({
   btnPrimary: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
   btnText: { color: 'white', fontWeight: '700' },
   quizBtn: { 
-    height: 56,
-    borderRadius: 16, 
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 5
+    height: 56, borderRadius: 16, 
+    alignItems: 'center', justifyContent: 'center',
+    marginTop: 10, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5
   },
   quizBtnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: 1 }
 });

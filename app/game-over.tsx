@@ -45,11 +45,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 32, fontWeight: '900', marginBottom: 12 },
   subtitle: { fontSize: 16, textAlign: 'center', lineHeight: 24, paddingHorizontal: 20 },
   footer: { marginBottom: 20, width: '100%', gap: 16 },
-  btn: { 
-    height: 56, borderRadius: 16, 
-    justifyContent: 'center', alignItems: 'center', flexDirection: 'row',
-    shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5
-  },
+  btn: { height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
   btnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: 1 },
   textBtn: { alignItems: 'center', padding: 10 },
   textBtnLabel: { fontSize: 16, fontWeight: '700', textTransform: 'uppercase' }

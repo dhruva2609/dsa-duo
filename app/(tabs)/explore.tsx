@@ -43,7 +43,7 @@ export default function ExploreScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-      <Header title="Library" showBack={false} style={{backgroundColor: theme.background, borderBottomWidth: 0}} />
+      <Header title="Explore" showBack={false} style={{backgroundColor: theme.background, borderBottomWidth: 0}} />
 
       <View style={styles.controlsContainer}>
         <View style={[styles.searchBar, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -93,8 +93,8 @@ export default function ExploreScreen() {
                 <View style={[styles.iconBox, { backgroundColor: theme.background }]}>
                   {getIcon(slug)}
                 </View>
-                <View>
-                  <Text style={[styles.cardTitle, { color: theme.text }]}>{module.topic}</Text>
+                <View style={styles.textWrapper}>
+                  <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit>{module.topic}</Text>
                   <Text style={[styles.cardSubtitle, { color: theme.textDim }]}>{module.questions.length} Concepts</Text>
                 </View>
               </View>
@@ -120,8 +120,9 @@ const styles = StyleSheet.create({
   filterText: { fontSize: 14, fontWeight: '600' },
   list: { paddingHorizontal: 24, paddingBottom: 100 },
   card: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderRadius: 20, marginBottom: 16, borderWidth: 1, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-  cardLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  cardLeft: { flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 }, // Added flex: 1 to allow text shrinking
   iconBox: { width: 50, height: 50, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  textWrapper: { flex: 1, marginRight: 8 }, // Added flex: 1 and margin
   cardTitle: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
   cardSubtitle: { fontSize: 13 },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },

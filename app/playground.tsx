@@ -10,7 +10,6 @@ export default function PlaygroundScreen() {
   const { isDark } = useUser();
   const theme = isDark ? Colors.dark : Colors.light;
 
-  // Default code snippet
   const [code, setCode] = useState(`// Write JavaScript here\n\nconst a = 10;\nconst b = 20;\n\nconsole.log("Result: " + (a + b));`);
   const [output, setOutput] = useState('Output will appear here...');
 
@@ -22,11 +21,8 @@ export default function PlaygroundScreen() {
           logs.push(args.join(' '));
         }
       };
-      
-      // Execute code safely-ish
       const run = new Function('console', code);
       run(mockConsole);
-      
       setOutput(logs.length > 0 ? logs.join('\n') : 'Code ran successfully (No output).');
     } catch (error: any) {
       setOutput(`Error: ${error.message}`);
@@ -36,20 +32,17 @@ export default function PlaygroundScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-      
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex: 1}}>
-        {/* Header */}
         <View style={[styles.header, { borderBottomColor: theme.border }]}>
           <Pressable onPress={() => router.back()} style={styles.iconBtn}>
             <ChevronLeft size={24} color={theme.text} />
           </Pressable>
           <Text style={[styles.title, { color: theme.text }]}>JS Playground</Text>
           <Pressable onPress={() => setCode('')} style={styles.iconBtn}>
-            <Trash2 size={22} color={theme.error} />
+            <Trash2 size={22} color={Colors.error} />
           </Pressable>
         </View>
 
-        {/* Editor Area */}
         <View style={[styles.editorContainer, { backgroundColor: theme.codeBg }]}>
           <TextInput 
             style={[styles.editor, { color: isDark ? '#D4D4D4' : '#333333' }]} 
@@ -59,12 +52,10 @@ export default function PlaygroundScreen() {
             value={code}
             onChangeText={setCode}
             textAlignVertical="top"
-            placeholder="// Start typing..."
             placeholderTextColor={theme.textDim}
           />
         </View>
 
-        {/* Output Console */}
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={[styles.consoleContainer, { backgroundColor: isDark ? '#1E1E1E' : '#F8F9FA', borderTopColor: theme.border }]}>
             <View style={[styles.consoleHeader, { backgroundColor: isDark ? '#252526' : '#E0E5F2' }]}>

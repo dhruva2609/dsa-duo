@@ -6,13 +6,12 @@ import { slugify } from '@/utils/slugify';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const QuizScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { deductHeart, addXp, completeLevel, hearts, addMistake, isDark } = useUser(); 
-  
   const theme = isDark ? Colors.dark : Colors.light;
 
   useEffect(() => {
@@ -69,9 +68,10 @@ const QuizScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <Stack.Screen options={{ headerShown: false }} />
       
-      {/* Custom Header */}
+      {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <ChevronLeft size={24} color={theme.text} />
@@ -81,7 +81,7 @@ const QuizScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Progress Bar */}
+        {/* Progress */}
         <View style={[styles.progressBarBg, { backgroundColor: theme.border }]}>
           <View style={[styles.progressBarFill, { width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`, backgroundColor: theme.primary }]} />
         </View>
@@ -116,7 +116,7 @@ const QuizScreen = () => {
         ))}
 
         {showExplanation && (
-          <View style={[styles.explanation, { backgroundColor: isCorrect ? 'rgba(5, 205, 153, 0.15)' : 'rgba(238, 93, 80, 0.15)' }]}>
+          <View style={[styles.explanation, { backgroundColor: isCorrect ? (isDark ? 'rgba(5, 205, 153, 0.15)' : 'rgba(5, 205, 153, 0.15)') : (isDark ? 'rgba(238, 93, 80, 0.15)' : 'rgba(238, 93, 80, 0.15)') }]}>
             <Text style={{ color: isCorrect ? Colors.success : Colors.error, fontWeight: '800', fontSize: 18, marginBottom: 8 }}>
                 {isCorrect ? 'Correct!' : 'Incorrect'}
             </Text>
@@ -135,7 +135,6 @@ const QuizScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, paddingTop: 10, borderBottomWidth: 1 },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: 18, fontWeight: '700', flex: 1, textAlign: 'center' },

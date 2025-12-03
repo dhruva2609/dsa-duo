@@ -33,10 +33,11 @@ export default function LeaderboardScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.podiumContainer}>
-          {[1, 0, 2].map((idx) => { // Order: 2nd, 1st, 3rd
+          {[1, 0, 2].map((idx) => { 
             const user = topThree[idx];
             const isFirst = idx === 0;
             const borderColor = isFirst ? '#F59E0B' : idx === 1 ? '#94A3B8' : '#B45309';
+            
             return (
               <View key={user.id} style={[styles.podiumCard, { marginTop: isFirst ? 0 : 40 }]}>
                 {isFirst && <Crown size={24} color="#F59E0B" fill="#F59E0B" style={{marginBottom: 8}} />}
@@ -59,7 +60,7 @@ export default function LeaderboardScreen() {
             return (
               <View key={user.id} style={[styles.rankRow, { backgroundColor: theme.card, shadowColor: theme.shadow }, isMe && { borderColor: theme.primary, borderWidth: 1 }]}>
                 <Text style={[styles.rankNum, { color: theme.textDim }]}>{index + 4}</Text>
-                <View style={[styles.listAvatar, { borderColor: user.color }]}>
+                <View style={[styles.listAvatar, { borderColor: user.color, backgroundColor: theme.background }]}>
                   <Text style={[styles.listAvatarText, { color: theme.text }]}>{user.avatar}</Text>
                 </View>
                 <Text style={[styles.rowName, { color: isMe ? theme.primary : theme.text }]}>{user.name}</Text>

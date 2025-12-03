@@ -16,11 +16,6 @@ export default function SuccessScreen() {
     addXp(20);
   }, []);
 
-  const handleContinue = () => {
-    router.dismissAll();
-    router.replace('/(tabs)');
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
@@ -41,7 +36,7 @@ export default function SuccessScreen() {
       <View style={styles.footer}>
         <Pressable 
           style={[styles.btn, { backgroundColor: theme.primary, shadowColor: theme.primary }]} 
-          onPress={handleContinue}
+          onPress={() => { router.dismissAll(); router.replace('/(tabs)'); }}
         >
           <Text style={styles.btnText}>CONTINUE</Text>
         </Pressable>
@@ -62,12 +57,7 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 18, fontWeight: '700' },
   xpBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8, borderRadius: 12 },
   xpText: { fontSize: 18, fontWeight: '800', color: '#FFCE20' },
-  
   footer: { marginBottom: 20 },
-  btn: { 
-    height: 56, borderRadius: 16, 
-    justifyContent: 'center', alignItems: 'center',
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 5
-  },
+  btn: { height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
   btnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: 1 }
 });

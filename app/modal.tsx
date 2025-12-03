@@ -39,9 +39,12 @@ export default function MenuModal() {
           <Text style={[styles.sectionLabel, { color: theme.textDim }]}>Learning</Text>
           <MenuItem icon={<Home size={22} color={theme.text} />} label="Home" onPress={() => { router.dismiss(); router.push('/(tabs)'); }} theme={theme} />
           <MenuItem icon={<BookOpen size={22} color={theme.text} />} label="Library" onPress={() => { router.dismiss(); router.push('/(tabs)/explore'); }} theme={theme} />
-          <MenuItem icon={<GitPullRequest size={22} color={Colors.error} />} label="Code Blitz" onPress={() => { router.dismiss(); router.push('/blitz'); }} theme={theme} />
+          
+          {/* Fixed Colors here */}
+          <MenuItem icon={<GitPullRequest size={22} color={theme.error} />} label="Code Blitz" onPress={() => { router.dismiss(); router.push('/blitz'); }} theme={theme} />
+          
           <MenuItem icon={<RefreshCw size={22} color="#FF9600" />} label="Review Mistakes" badge={mistakes?.length > 0 ? String(mistakes.length) : undefined} onPress={() => { router.dismiss(); router.push('/review'); }} theme={theme} />
-          <MenuItem icon={<Code size={22} color={Colors.success} />} label="JS Playground" onPress={() => { router.dismiss(); router.push('/playground'); }} theme={theme} />
+          <MenuItem icon={<Code size={22} color={theme.success} />} label="JS Playground" onPress={() => { router.dismiss(); router.push('/playground'); }} theme={theme} />
         </View>
 
         <View style={styles.section}>

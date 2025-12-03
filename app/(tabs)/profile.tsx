@@ -1,9 +1,10 @@
 import { useUser } from '@/app/context/UserContext';
+import { Header } from '@/components/Header'; // Use shared Header
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { Flame, Layers, Settings, Trash2, Zap } from 'lucide-react-native';
 import React from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -11,21 +12,26 @@ export default function ProfileScreen() {
   const theme = isDark ? Colors.dark : Colors.light;
 
   const badges = [
-    { id: 'first_win', title: 'Hello World', desc: 'First quiz done', icon: <Zap size={20} color="#FFCE20" /> },
+    { id: 'first_win', title: 'Hello World', desc: 'First quiz done', icon: <Zap size={20} color={Colors.warning} fill={Colors.warning} /> },
     { id: 'novice_coder', title: 'Git Commit', desc: 'Earned 100 XP', icon: <Layers size={20} color={theme.primary} /> },
-    { id: 'streak_3', title: 'Hotfix Hero', desc: '3-day streak', icon: <Flame size={20} color="#EE5D50" /> }
+    { id: 'streak_3', title: 'Hotfix Hero', desc: '3-day streak', icon: <Flame size={20} color={Colors.error} fill={Colors.error} /> }
   ];
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Profile</Text>
-        <Pressable onPress={() => router.push('/settings')} style={[styles.iconBtn, { backgroundColor: theme.card }]}>
-          <Settings size={22} color={theme.text} />
-        </Pressable>
-      </View>
+      <Header 
+        title="Profile" 
+        showBack={false} 
+        rightElement={
+          <Pressable onPress={() => router.push('/settings')} style={[styles.iconBtn, { backgroundColor: theme.card }]}>
+            <Settings size={22} color={theme.text} />
+          </Pressable>
+        }
+        style={{borderBottomWidth: 0}}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll}>
+        {/* ... (Profile Card code remains same as previous, styles below updated) ... */}
         <View style={[styles.profileCard, { backgroundColor: theme.card, shadowColor: theme.shadow }]}>
           <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
             <Text style={styles.avatarText}>DP</Text>
@@ -76,10 +82,8 @@ const StatItem = ({ label, value, theme }: any) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: Platform.OS === 'android' ? 50 : 60, paddingHorizontal: 24, paddingBottom: 20 },
-  headerTitle: { fontSize: 24, fontWeight: '800' },
   iconBtn: { padding: 8, borderRadius: 12 },
-  scroll: { paddingHorizontal: 24, paddingBottom: 100 },
+  scroll: { paddingHorizontal: 24, paddingBottom: 120 }, // Fixed bottom overlap
   profileCard: { borderRadius: 24, padding: 24, alignItems: 'center', marginBottom: 30, shadowOpacity: 0.1, shadowRadius: 20, elevation: 5 },
   avatar: { width: 80, height: 80, borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   avatarText: { fontSize: 32, fontWeight: '700', color: 'white' },

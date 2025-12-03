@@ -15,12 +15,12 @@ const SWIPE_THRESHOLD = width * 0.3;
 export default function BlitzScreen() {
   const router = useRouter();
   const { addXp, deductHeart, isDark } = useUser();
+  // Select the correct palette based on isDark
   const theme = isDark ? Colors.dark : Colors.light;
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
-  // Animation Values
   const translateX = useSharedValue(0);
   const nextCardScale = useSharedValue(0.9);
 
@@ -78,7 +78,6 @@ export default function BlitzScreen() {
     opacity: nextCardScale.value,
   }));
 
-  // Render Completed View
   if (isComplete) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -97,8 +96,6 @@ export default function BlitzScreen() {
   return (
     <GestureHandlerRootView style={[styles.container, { backgroundColor: theme.background }]}>
       <SafeAreaView style={{ flex: 1 }}>
-        
-        {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <ChevronLeft size={28} color={theme.text} />
@@ -110,14 +107,12 @@ export default function BlitzScreen() {
         </View>
 
         <View style={styles.deck}>
-          {/* Background Card (Next) */}
           {currentIndex < BLITZ_CARDS.length - 1 && (
             <Animated.View style={[styles.card, styles.nextCard, nextCardStyle, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <View style={[styles.placeholderBlock, { backgroundColor: theme.background }]} />
             </Animated.View>
           )}
 
-          {/* Active Card */}
           <GestureDetector gesture={gesture}>
             <Animated.View style={[styles.card, cardStyle, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]}>
               <View style={[styles.cardHeader, { backgroundColor: theme.background, borderBottomColor: theme.border }]}>
@@ -140,25 +135,25 @@ export default function BlitzScreen() {
 
               <View style={styles.tutorialOverlay}>
                 <View style={styles.tutorialLeft}>
-                  <X color={Colors.error} size={24} />
-                  <Text style={[styles.tutorialText, {color: Colors.error}]}>REJECT</Text>
+                  {/* FIX: Using theme.error instead of Colors.error */}
+                  <X color={theme.error} size={24} />
+                  <Text style={[styles.tutorialText, {color: theme.error}]}>REJECT</Text>
                 </View>
                 <View style={styles.tutorialRight}>
-                  <Text style={[styles.tutorialText, {color: Colors.success}]}>MERGE</Text>
-                  <Check color={Colors.success} size={24} />
+                  <Text style={[styles.tutorialText, {color: theme.success}]}>MERGE</Text>
+                  <Check color={theme.success} size={24} />
                 </View>
               </View>
             </Animated.View>
           </GestureDetector>
         </View>
 
-        {/* Manual Buttons */}
         <View style={styles.controls}>
-          <Pressable style={[styles.controlBtn, {backgroundColor: Colors.error + '15', borderColor: Colors.error}]} onPress={() => handleSwipeComplete('left')}>
-            <X color={Colors.error} size={32} />
+          <Pressable style={[styles.controlBtn, {backgroundColor: theme.error + '15', borderColor: theme.error}]} onPress={() => handleSwipeComplete('left')}>
+            <X color={theme.error} size={32} />
           </Pressable>
-          <Pressable style={[styles.controlBtn, {backgroundColor: Colors.success + '15', borderColor: Colors.success}]} onPress={() => handleSwipeComplete('right')}>
-            <GitMerge color={Colors.success} size={32} />
+          <Pressable style={[styles.controlBtn, {backgroundColor: theme.success + '15', borderColor: theme.success}]} onPress={() => handleSwipeComplete('right')}>
+            <GitMerge color={theme.success} size={32} />
           </Pressable>
         </View>
 
@@ -216,7 +211,7 @@ const styles = StyleSheet.create({
   controls: { flexDirection: 'row', justifyContent: 'center', gap: 40, marginBottom: 30 },
   controlBtn: { 
     width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', 
-    borderWidth: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 
+    borderWidth: 2, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 
   },
 
   centerContent: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },

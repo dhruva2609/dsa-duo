@@ -39,6 +39,7 @@ export type UserContextType = {
   toggleTheme: () => void;
   toggleNotifications: () => void;
   toggleSoundEffects: () => void;
+  togglePremium: () => void;
 };
 
 const UserContext = createContext<UserContextType>({} as UserContextType);
@@ -54,7 +55,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState(true);
   const [soundEffects, setSoundEffects] = useState(true);
   
-  // New States
   const [isPremium, setIsPremium] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
   const [lastActiveDate, setLastActiveDate] = useState<string | null>(null);
@@ -74,7 +74,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const storedNotifications = await AsyncStorage.getItem('user_notifications');
         const storedSoundEffects = await AsyncStorage.getItem('user_soundEffects');
         
-        // Load new states
         const storedIsPremium = await AsyncStorage.getItem('user_isPremium');
         const storedStreak = await AsyncStorage.getItem('user_streak');
         const storedLastActive = await AsyncStorage.getItem('user_lastActiveDate');
@@ -85,11 +84,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         if (storedHearts) setHearts(parseInt(storedHearts));
         if (storedMistakes) setMistakes(JSON.parse(storedMistakes));
         if (storedAchievements) setAchievements(JSON.parse(storedAchievements));
-        if (storedIsDark) setIsDark(JSON.parse(storedIsDark));
-        if (storedNotifications) setNotifications(JSON.parse(storedNotifications));
-        if (storedSoundEffects) setSoundEffects(JSON.parse(storedSoundEffects));
         
-        if (storedIsPremium) setIsPremium(JSON.parse(storedIsPremium));
+        // IMPORTANT: Parse boolean correctly
+        if (storedIsDark !== null) setIsDark(JSON.parse(storedIsDark));
+        if (storedNotifications !== null) setNotifications(JSON.parse(storedNotifications));
+        if (storedSoundEffects !== null) setSoundEffects(JSON.parse(storedSoundEffects));
+        if (storedIsPremium !== null) setIsPremium(JSON.parse(storedIsPremium));
+        
         if (storedStreak) setStreakCount(parseInt(storedStreak));
         if (storedLastActive) setLastActiveDate(storedLastActive);
 
@@ -112,12 +113,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       AsyncStorage.setItem('user_hearts', hearts.toString());
       AsyncStorage.setItem('user_mistakes', JSON.stringify(mistakes));
       AsyncStorage.setItem('user_achievements', JSON.stringify(achievements));
+      
+      // Save Theme & Settings
       AsyncStorage.setItem('user_isDark', JSON.stringify(isDark));
       AsyncStorage.setItem('user_notifications', JSON.stringify(notifications));
       AsyncStorage.setItem('user_soundEffects', JSON.stringify(soundEffects));
-      
-      // Save new states
       AsyncStorage.setItem('user_isPremium', JSON.stringify(isPremium));
+      
       AsyncStorage.setItem('user_streak', streakCount.toString());
       if (lastActiveDate) AsyncStorage.setItem('user_lastActiveDate', lastActiveDate);
     }
@@ -131,14 +133,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setCompletedLevels([]);
     setMistakes([]);
     setAchievements([]);
-    setIsDark(false);
+    // Optional: Keep theme preference on sign out? Currently resetting.
+    setIsDark(false); 
     setStreakCount(0);
     setLastActiveDate(null);
     setIsPremium(false);
     await AsyncStorage.clear();
   };
 
-  const deductHeart = () => setHearts((prev) => Math.max(0, prev - 1));
+  const deductHeart = () => !isPremium && setHearts((prev) => Math.max(0, prev - 1));
   const refillHearts = () => setHearts(5);
   const addXp = (amount: number) => setXp((prev) => prev + amount);
   
@@ -149,7 +152,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addMistake = (question: QuestionData) => {
-    // Avoid duplicates
     if (!mistakes.find(m => m.q === question.q)) {
       setMistakes(prev => [...prev, question]);
     }
@@ -168,12 +170,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const toggleTheme = () => setIsDark(prev => !prev);
   const toggleNotifications = () => setNotifications(prev => !prev);
   const toggleSoundEffects = () => setSoundEffects(prev => !prev);
+  const togglePremium = () => setIsPremium(prev => !prev);
 
-  // New Function: Update Streak
   const updateStreak = () => {
     const today = new Date().toDateString();
-    
-    // If already updated today, do nothing
     if (lastActiveDate === today) return false;
 
     const yesterday = new Date();
@@ -182,11 +182,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     let streakUpdated = false;
 
     if (lastActiveDate === yesterday.toDateString()) {
-      // Streak continues
       setStreakCount(prev => prev + 1);
       streakUpdated = true;
     } else {
-      // Streak broken or new user, reset to 1
       setStreakCount(1);
       streakUpdated = true;
     }
@@ -203,7 +201,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setAchievements([]);
     setStreakCount(0);
     setLastActiveDate(null);
-    await AsyncStorage.clear();
+    // We generally don't reset theme preference on progress reset
+    await AsyncStorage.removeItem('user_xp');
+    await AsyncStorage.removeItem('user_levels');
+    await AsyncStorage.removeItem('user_hearts');
+    // ... clear other progress keys
   };
 
   return (
@@ -218,7 +220,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       isDark, toggleTheme,
       notifications, toggleNotifications,
       soundEffects, toggleSoundEffects, 
-      isPremium, streakCount, updateStreak
+      isPremium, togglePremium,
+      streakCount, updateStreak
     }}>
       {children}
     </UserContext.Provider>
