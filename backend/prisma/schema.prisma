@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  password    String
+  xp          Int      @default(0)
+  hearts      Int      @default(5)
+  streak      Int      @default(0)
+  lastActive  DateTime @default(now())
+  isPremium   Boolean  @default(false)
+  
+  progress    UserProgress[]
+  createdAt   DateTime @default(now())
+}
+
+// Represents a DSA Topic (e.g., "Linked Lists")
+model Module {
+  id          String     @id @default(uuid())
+  slug        String     @unique // e.g. "linked-lists"
+  title       String
+  difficulty  String     // "Easy", "Medium", "Hard"
+  icon        String     // e.g. "code-braces"
+  
+  questions   Question[]
+  progress    UserProgress[]
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  moduleId      String
+  module        Module   @relation(fields: [moduleId], references: [id])
+  
+  text          String
+  codeSnippet   String?  // For code blocks
+  options       String[] // Array of answer choices
+  correctAnswer String
+  explanation   String
+}
+
+// Tracks which user completed which module
+model UserProgress {
+  id        String  @id @default(uuid())
+  userId    String
+  moduleId  String
+  completed Boolean @default(false)
+  
+  user      User    @relation(fields: [userId], references: [id])
+  module    Module  @relation(fields: [moduleId], references: [id])
+
+  @@unique([userId, moduleId])
+}
