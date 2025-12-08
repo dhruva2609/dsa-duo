@@ -2,7 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 type User = {
+  id: string;
   name: string;
+  email: string;
 };
 
 export type QuestionData = {
@@ -26,7 +28,7 @@ export type UserContextType = {
   isPremium: boolean;
   streakCount: number;
   updateStreak: () => boolean;
-  signIn: (user: User) => void;
+  signIn: (user: User, token: string) => void;
   signOut: () => void;
   deductHeart: () => void;
   addXp: (amount: number) => void;
@@ -125,7 +127,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, xp, completedLevels, hearts, mistakes, achievements, isDark, notifications, soundEffects, isPremium, streakCount, lastActiveDate, isLoaded]);
 
-  const signIn = (userData: User) => setUser(userData);
+const signIn = async (userData: User, token: string) => {
+  setUser(userData);
+  await AsyncStorage.setItem('user', JSON.stringify(userData));
+  await AsyncStorage.setItem('user_token', token);
+};
   const signOut = async () => {
     setUser(null);
     setHearts(5);

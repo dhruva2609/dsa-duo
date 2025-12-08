@@ -1,5 +1,6 @@
 import { useUser } from '@/app/context/UserContext';
 import { Colors } from '@/constants/Colors';
+import { apiCall } from '@/utils/api'; // Import the helper
 import { useRouter } from 'expo-router';
 import { Layers } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -12,16 +13,29 @@ export default function LoginScreen() {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (email.toLowerCase() === 'test@example.com' && password === 'password') {
-      signIn({ name: 'Test User' });
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = await apiCall('/api/auth/login', 'POST', { email, password });
+      
+      // data.user and data.token come from the backend response
+      signIn(data.user, data.token); 
+      
       router.replace('/(tabs)');
-    } else {
-      Alert.alert('Login Failed', 'Invalid email or password.');
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.message);
+    } finally {
+      setLoading(false);
     }
   };
-
+  
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />

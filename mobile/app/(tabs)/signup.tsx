@@ -1,5 +1,6 @@
 import { useUser } from '@/app/context/UserContext';
 import { Colors } from '@/constants/Colors';
+import { apiCall } from '@/utils/api';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import React, { useState } from 'react';
@@ -9,17 +10,31 @@ export default function SignupScreen() {
   const router = useRouter();
   const { isDark } = useUser();
   const theme = isDark ? Colors.dark : Colors.light;
-
+  const [loading, setLoading] = useState(false);
+  const { signIn } = useUser();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!name || !email || !password) {
       Alert.alert('Missing Information', 'Please fill out all fields.');
       return;
     }
-    router.replace('/(tabs)');
+
+    setLoading(true);
+    try {
+      const data = await apiCall('/api/auth/signup', 'POST', { name, email, password });
+      
+      // Auto-login the user after signup
+      signIn(data.user, data.token);
+      
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Alert.alert('Signup Failed', error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
