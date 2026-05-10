@@ -4,11 +4,11 @@ import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { Flame, Layers, Settings, Trash2, Zap } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { xp, hearts, achievements, resetProgress, isDark } = useUser();
+  const { user, xp, hearts, streakCount, achievements, resetProgress, signOut, isDark } = useUser();
   const theme = isDark ? Colors.dark : Colors.light;
 
   const badges = [
@@ -16,6 +16,10 @@ export default function ProfileScreen() {
     { id: 'novice_coder', title: 'Git Commit', desc: 'Earned 100 XP', icon: <Layers size={20} color={theme.primary} /> },
     { id: 'streak_3', title: 'Hotfix Hero', desc: '3-day streak', icon: <Flame size={20} color={Colors.error} fill={Colors.error} /> }
   ];
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -31,20 +35,19 @@ export default function ProfileScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* ... (Profile Card code remains same as previous, styles below updated) ... */}
         <View style={[styles.profileCard, { backgroundColor: theme.card, shadowColor: theme.shadow }]}>
           <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-            <Text style={styles.avatarText}>DP</Text>
+            <Text style={styles.avatarText}>{user?.name ? getInitials(user.name) : '??'}</Text>
           </View>
-          <Text style={[styles.name, { color: theme.text }]}>Dhruva Pandya</Text>
-          <Text style={[styles.handle, { color: theme.primary }]}>@dhruvadev</Text>
+          <Text style={[styles.name, { color: theme.text }]}>{user?.name || 'Developer'}</Text>
+          <Text style={[styles.handle, { color: theme.primary }]}>@{user?.email.split('@')[0] || 'dev'}</Text>
           
           <View style={styles.statsRow}>
             <StatItem label="XP" value={xp} theme={theme} />
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
             <StatItem label="Hearts" value={hearts} theme={theme} />
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
-            <StatItem label="Streak" value={0} theme={theme} />
+            <StatItem label="Streak" value={streakCount} theme={theme} />
           </View>
         </View>
 
@@ -64,6 +67,13 @@ export default function ProfileScreen() {
           })}
         </View>
 
+        <TouchableOpacity 
+          className="mt-10 mb-5 bg-red-50 py-4 rounded-2xl flex-row justify-center items-center"
+          onPress={signOut}
+        >
+          <Text className="text-red-500 font-bold text-lg">Sign Out</Text>
+        </TouchableOpacity>
+
         <Pressable style={styles.resetBtn} onPress={resetProgress}>
             <Trash2 size={18} color="#EE5D50" />
             <Text style={styles.resetText}>Reset All Progress</Text>
@@ -72,6 +82,7 @@ export default function ProfileScreen() {
     </View>
   );
 }
+
 
 const StatItem = ({ label, value, theme }: any) => (
   <View style={styles.statItem}>

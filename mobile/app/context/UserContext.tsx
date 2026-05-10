@@ -16,7 +16,9 @@ export type QuestionData = {
 
 export type UserContextType = {
   user: User | null;
+  token: string | null;
   hearts: number;
+
   xp: number;
   completedLevels: string[];
   mistakes: QuestionData[];
@@ -27,8 +29,11 @@ export type UserContextType = {
   soundEffects: boolean;
   isPremium: boolean;
   streakCount: number;
+  selectedLanguage: string;
+  setSelectedLanguage: (lang: string) => void;
   updateStreak: () => boolean;
   signIn: (user: User, token: string) => void;
+
   signOut: () => void;
   deductHeart: () => void;
   addXp: (amount: number) => void;
@@ -46,8 +51,12 @@ export type UserContextType = {
 
 const UserContext = createContext<UserContextType>({} as UserContextType);
 
+// API Base URL - Update this for physical devices
+const API_URL = 'http://localhost:5000/api';
+
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [hearts, setHearts] = useState(5);
   const [xp, setXp] = useState(0);
   const [completedLevels, setCompletedLevels] = useState<string[]>([]);
@@ -59,6 +68,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   
   const [isPremium, setIsPremium] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
+  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
   const [lastActiveDate, setLastActiveDate] = useState<string | null>(null);
   
   const [isLoaded, setIsLoaded] = useState(false);
@@ -66,7 +76,31 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const loadState = async () => {
       try {
+        const storedToken = await AsyncStorage.getItem('user_token');
         const storedUser = await AsyncStorage.getItem('user');
+        
+        if (storedToken) {
+          setToken(storedToken);
+          // Try to get fresh profile from backend
+          try {
+            const res = await fetch(`${API_URL}/user/profile`, {
+              headers: { 'Authorization': `Bearer ${storedToken}` }
+            });
+            if (res.ok) {
+              const profile = await res.json();
+              setUser({ id: profile.id, name: profile.name, email: profile.email });
+              setXp(profile.xp);
+              setHearts(profile.hearts);
+              setStreakCount(profile.streak);
+              setIsPremium(profile.isPremium);
+            } else if (storedUser) {
+              setUser(JSON.parse(storedUser));
+            }
+          } catch (err) {
+            if (storedUser) setUser(JSON.parse(storedUser));
+          }
+        }
+
         const storedXp = await AsyncStorage.getItem('user_xp');
         const storedLevels = await AsyncStorage.getItem('user_levels');
         const storedHearts = await AsyncStorage.getItem('user_hearts');
@@ -75,26 +109,26 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const storedIsDark = await AsyncStorage.getItem('user_isDark');
         const storedNotifications = await AsyncStorage.getItem('user_notifications');
         const storedSoundEffects = await AsyncStorage.getItem('user_soundEffects');
-        
         const storedIsPremium = await AsyncStorage.getItem('user_isPremium');
         const storedStreak = await AsyncStorage.getItem('user_streak');
         const storedLastActive = await AsyncStorage.getItem('user_lastActiveDate');
+        const storedLanguage = await AsyncStorage.getItem('user_language');
 
-        if (storedUser) setUser(JSON.parse(storedUser));
-        if (storedXp) setXp(parseInt(storedXp));
+        if (!user && storedUser) setUser(JSON.parse(storedUser));
+        if (storedXp && !xp) setXp(parseInt(storedXp));
         if (storedLevels) setCompletedLevels(JSON.parse(storedLevels));
-        if (storedHearts) setHearts(parseInt(storedHearts));
+        if (storedHearts && !hearts) setHearts(parseInt(storedHearts));
         if (storedMistakes) setMistakes(JSON.parse(storedMistakes));
         if (storedAchievements) setAchievements(JSON.parse(storedAchievements));
         
-        // IMPORTANT: Parse boolean correctly
         if (storedIsDark !== null) setIsDark(JSON.parse(storedIsDark));
         if (storedNotifications !== null) setNotifications(JSON.parse(storedNotifications));
         if (storedSoundEffects !== null) setSoundEffects(JSON.parse(storedSoundEffects));
-        if (storedIsPremium !== null) setIsPremium(JSON.parse(storedIsPremium));
+        if (storedIsPremium !== null && !isPremium) setIsPremium(JSON.parse(storedIsPremium));
         
-        if (storedStreak) setStreakCount(parseInt(storedStreak));
+        if (storedStreak && !streakCount) setStreakCount(parseInt(storedStreak));
         if (storedLastActive) setLastActiveDate(storedLastActive);
+        if (storedLanguage) setSelectedLanguage(storedLanguage);
 
       } catch (e) {
         console.error("Failed to load state from storage", e);
@@ -110,36 +144,45 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       if (user) AsyncStorage.setItem('user', JSON.stringify(user));
       else AsyncStorage.removeItem('user');
       
+      if (token) AsyncStorage.setItem('user_token', token);
+      else AsyncStorage.removeItem('user_token');
+
       AsyncStorage.setItem('user_xp', xp.toString());
       AsyncStorage.setItem('user_levels', JSON.stringify(completedLevels));
       AsyncStorage.setItem('user_hearts', hearts.toString());
       AsyncStorage.setItem('user_mistakes', JSON.stringify(mistakes));
       AsyncStorage.setItem('user_achievements', JSON.stringify(achievements));
       
-      // Save Theme & Settings
       AsyncStorage.setItem('user_isDark', JSON.stringify(isDark));
       AsyncStorage.setItem('user_notifications', JSON.stringify(notifications));
       AsyncStorage.setItem('user_soundEffects', JSON.stringify(soundEffects));
       AsyncStorage.setItem('user_isPremium', JSON.stringify(isPremium));
       
       AsyncStorage.setItem('user_streak', streakCount.toString());
+      AsyncStorage.setItem('user_language', selectedLanguage);
       if (lastActiveDate) AsyncStorage.setItem('user_lastActiveDate', lastActiveDate);
     }
-  }, [user, xp, completedLevels, hearts, mistakes, achievements, isDark, notifications, soundEffects, isPremium, streakCount, lastActiveDate, isLoaded]);
+  }, [user, token, xp, completedLevels, hearts, mistakes, achievements, isDark, notifications, soundEffects, isPremium, streakCount, selectedLanguage, lastActiveDate, isLoaded]);
 
-const signIn = async (userData: User, token: string) => {
-  setUser(userData);
-  await AsyncStorage.setItem('user', JSON.stringify(userData));
-  await AsyncStorage.setItem('user_token', token);
-};
+  const signIn = async (userData: User, userToken: string) => {
+    setUser(userData);
+    setToken(userToken);
+    await AsyncStorage.setItem('user', JSON.stringify(userData));
+    await AsyncStorage.setItem('user_token', userToken);
+    
+    // Sync other stats if they exist on user object from backend
+    if ((userData as any).xp !== undefined) setXp((userData as any).xp);
+    if ((userData as any).hearts !== undefined) setHearts((userData as any).hearts);
+  };
+
   const signOut = async () => {
     setUser(null);
+    setToken(null);
     setHearts(5);
     setXp(0);
     setCompletedLevels([]);
     setMistakes([]);
     setAchievements([]);
-    // Optional: Keep theme preference on sign out? Currently resetting.
     setIsDark(false); 
     setStreakCount(0);
     setLastActiveDate(null);
@@ -147,13 +190,53 @@ const signIn = async (userData: User, token: string) => {
     await AsyncStorage.clear();
   };
 
-  const deductHeart = () => !isPremium && setHearts((prev) => Math.max(0, prev - 1));
+  const deductHeart = async () => {
+    if (isPremium) return;
+    setHearts((prev) => Math.max(0, prev - 1));
+    
+    if (token) {
+      try {
+        await fetch(`${API_URL}/user/deduct-heart`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (err) { console.error("Failed to sync heart deduction", err); }
+    }
+  };
+
   const refillHearts = () => setHearts(5);
-  const addXp = (amount: number) => setXp((prev) => prev + amount);
+
+  const addXp = async (amount: number) => {
+    setXp((prev) => prev + amount);
+    if (token) {
+      try {
+        await fetch(`${API_URL}/user/update-xp`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ xp: amount })
+        });
+      } catch (err) { console.error("Failed to sync XP", err); }
+    }
+  };
   
-  const completeLevel = (slug: string) => {
+  const completeLevel = async (slug: string) => {
     if (!completedLevels.includes(slug)) {
       setCompletedLevels((prev) => [...prev, slug]);
+      if (token) {
+        try {
+          await fetch(`${API_URL}/quiz/complete`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ slug })
+          });
+        } catch (err) { console.error("Failed to sync completion", err); }
+      }
     }
   };
 
@@ -207,17 +290,23 @@ const signIn = async (userData: User, token: string) => {
     setAchievements([]);
     setStreakCount(0);
     setLastActiveDate(null);
-    // We generally don't reset theme preference on progress reset
-    await AsyncStorage.removeItem('user_xp');
-    await AsyncStorage.removeItem('user_levels');
-    await AsyncStorage.removeItem('user_hearts');
-    // ... clear other progress keys
+    if (token) {
+      try {
+        await fetch(`${API_URL}/user/reset-progress`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (err) { console.error("Failed to sync reset", err); }
+    }
+    await AsyncStorage.multiRemove(['user_xp', 'user_levels', 'user_hearts', 'user_mistakes', 'user_achievements', 'user_streak', 'user_lastActiveDate']);
   };
+
 
   return (
     <UserContext.Provider value={{
-      user, signIn, signOut,
+      user, token, signIn, signOut,
       hearts, deductHeart, refillHearts,
+
       xp, addXp,
       completedLevels, completeLevel,
       mistakes, addMistake, removeMistake,
@@ -227,7 +316,8 @@ const signIn = async (userData: User, token: string) => {
       notifications, toggleNotifications,
       soundEffects, toggleSoundEffects, 
       isPremium, togglePremium,
-      streakCount, updateStreak
+      streakCount, updateStreak,
+      selectedLanguage, setSelectedLanguage
     }}>
       {children}
     </UserContext.Provider>

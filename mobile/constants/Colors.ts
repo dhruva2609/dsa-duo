@@ -1,41 +1,58 @@
+const tintColorLight = '#8B5CF6';
+const tintColorDark = '#8B5CF6';
+
 export const Colors = {
   light: {
-    primary: '#4318FF',       // Vibrant Indigo
-    primaryDark: '#2B3674',   // Deep Navy
-    background: '#F4F7FE',    // Light Grey-Blue
-    card: '#FFFFFF',          // White
-    text: '#1B2559',          // Dark Navy
-    textDim: '#A3AED0',       // Cool Grey
-    border: '#E0E5F2',        // Subtle Border
-    icon: '#A3AED0',          // Default Icon Color
-    success: '#05CD99',       // Mint Green
-    error: '#EE5D50',         // Soft Red
-    warning: '#FFCE20',       // Amber
-    shadow: '#7090B0',        // Soft Blue-Grey Shadow
-    codeBg: '#F4F7FE',        // Code block background
+    primary: '#8B5CF6',       // Electric Violet
+    primaryDark: '#7C3AED',
+    primaryLight: '#C4B5FD',
+    secondary: '#10B981',     // Emerald
+    accent: '#F43F5E',        // Rose Red
+    background: '#F8FAFC',    // Light Slate
+    card: '#FFFFFF',          
+    text: '#0F172A',          // Deep Midnight
+    textDim: '#64748B',       
+    border: '#E2E8F0',        
+    icon: '#64748B',          
+    success: '#10B981',       
+    error: '#F43F5E',         
+    warning: '#F59E0B',       
+    shadow: 'rgba(139, 92, 246, 0.15)',
+    codeBg: '#F1F5F9',        
+    surface: 'rgba(255, 255, 255, 0.8)', // Glassmorphism
+    tint: tintColorLight,
+    tabIconDefault: '#64748B',
+    tabIconSelected: tintColorLight,
   },
   dark: {
-    primary: '#7551FF',       // Lighter Indigo for dark contrast
-    primaryDark: '#FFFFFF',   // White Headings
-    background: '#0B1437',    // Deep Navy (Image 1 Theme)
-    card: '#111C44',          // Card Navy
-    text: '#E0E5F2',          // Light Grey Text
-    textDim: '#8F9BBA',       // Dimmed Blue-Grey
-    border: '#2B3674',        // Dark Blue Border
-    icon: '#8F9BBA',          // Default Icon Color
-    success: '#05CD99',       // Mint Green
-    error: '#EE5D50',         // Soft Red
-    warning: '#FFCE20',       // Amber
-    shadow: '#000000',        // Black Shadow
-    codeBg: '#0B1437',        // Code block background
+    primary: '#8B5CF6',       // Electric Violet
+    primaryDark: '#7C3AED',
+    primaryLight: '#C4B5FD',
+    secondary: '#10B981',     // Emerald
+    accent: '#F43F5E',        // Rose Red
+    background: '#0F172A',    // Deep Midnight
+    card: '#1E293B',          // Slate 800
+    text: '#F8FAFC',          
+    textDim: '#94A3B8',       
+    border: '#334155',        
+    icon: '#94A3B8',          
+    success: '#10B981',       
+    error: '#F43F5E',         
+    warning: '#F59E0B',       
+    shadow: 'rgba(0,0,0,0.5)',
+    codeBg: '#0F172A',        
+    surface: 'rgba(30, 41, 59, 0.6)', // Glassmorphism
+    tint: tintColorDark,
+    tabIconDefault: '#94A3B8',
+    tabIconSelected: tintColorDark,
   },
-  // Global Fallbacks (Required for TS & Static Styles)
-  primary: '#4318FF',
-  error: '#EE5D50',
-  success: '#05CD99',
-  warning: '#FFCE20', // Fixed: Added missing warning property
-  text: '#1B2559',
-  textDim: '#A3AED0',
-  border: '#E0E5F2',
-  background: '#F4F7FE'
+  // Global Fallbacks
+  primary: '#8B5CF6',
+  error: '#F43F5E',
+  success: '#10B981',
+  warning: '#F59E0B',
+  text: '#0F172A',
+  textDim: '#64748B',
+  border: '#E2E8F0',
+  background: '#F8FAFC'
 };

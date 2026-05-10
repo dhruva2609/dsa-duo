@@ -45,3 +45,24 @@ export const deductHeart = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: 'Error updating hearts' });
   }
 };
+
+// Reset Progress
+export const resetProgress = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { xp: 0, hearts: 5, streak: 0 },
+    });
+
+    await prisma.userProgress.deleteMany({
+      where: { userId }
+    });
+
+    res.json({ success: true, message: 'Progress reset successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error during reset' });
+  }
+};

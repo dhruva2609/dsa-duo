@@ -14,11 +14,12 @@ const otherUsers = [
 ];
 
 export default function LeaderboardScreen() {
-  const { xp: userXp, isDark } = useUser();
+  const { user, xp: userXp, isDark } = useUser();
   const theme = isDark ? Colors.dark : Colors.light;
   
-  const currentUser = { id: 1, name: "Dhruva", xp: userXp, avatar: "DP", color: theme.primary };
+  const currentUser = { id: 1, name: user?.name || "Dev", xp: userXp, avatar: user?.name?.[0].toUpperCase() || "D", color: theme.primary };
   const allUsers = [...otherUsers, currentUser].sort((a, b) => b.xp - a.xp);
+
   const topThree = allUsers.slice(0, 3);
   const restUsers = allUsers.slice(3);
 
@@ -55,19 +56,20 @@ export default function LeaderboardScreen() {
         </View>
 
         <View style={styles.listContainer}>
-          {restUsers.map((user, index) => {
-            const isMe = user.name === "Dhruva";
+          {restUsers.map((u, index) => {
+            const isMe = u.name === currentUser.name;
             return (
-              <View key={user.id} style={[styles.rankRow, { backgroundColor: theme.card, shadowColor: theme.shadow }, isMe && { borderColor: theme.primary, borderWidth: 1 }]}>
+              <View key={u.id} style={[styles.rankRow, { backgroundColor: theme.card, shadowColor: theme.shadow }, isMe && { borderColor: theme.primary, borderWidth: 1 }]}>
                 <Text style={[styles.rankNum, { color: theme.textDim }]}>{index + 4}</Text>
-                <View style={[styles.listAvatar, { borderColor: user.color, backgroundColor: theme.background }]}>
-                  <Text style={[styles.listAvatarText, { color: theme.text }]}>{user.avatar}</Text>
+                <View style={[styles.listAvatar, { borderColor: u.color, backgroundColor: theme.background }]}>
+                  <Text style={[styles.listAvatarText, { color: theme.text }]}>{u.avatar}</Text>
                 </View>
-                <Text style={[styles.rowName, { color: isMe ? theme.primary : theme.text }]}>{user.name}</Text>
-                <Text style={[styles.rowXp, { color: theme.textDim }]}>{user.xp} XP</Text>
+                <Text style={[styles.rowName, { color: isMe ? theme.primary : theme.text }]}>{u.name}</Text>
+                <Text style={[styles.rowXp, { color: theme.textDim }]}>{u.xp} XP</Text>
               </View>
             );
           })}
+
         </View>
       </ScrollView>
     </View>

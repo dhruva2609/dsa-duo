@@ -27,12 +27,14 @@ model Module {
   id          String     @id @default(uuid())
   slug        String     @unique // e.g. "linked-lists"
   title       String
+  language    String     @default("javascript") // "javascript", "python", "cpp", etc.
   difficulty  String     // "Easy", "Medium", "Hard"
   icon        String     // e.g. "code-braces"
   
   questions   Question[]
   progress    UserProgress[]
 }
+
 
 model Question {
   id            String   @id @default(uuid())
